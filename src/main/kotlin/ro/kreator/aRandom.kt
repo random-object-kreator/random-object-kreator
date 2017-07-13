@@ -9,7 +9,10 @@ import kotlin.reflect.KProperty
 /**
  * A delegate which creates a random list of the specified type. It must be used as a delegate
  * using the delegate property syntax:
+ *
  * val randomUsers by aRandomListOf<User>()
+ *
+ * It works with generic types as well.
  */
 class aRandomListOf<out T : Any>(private val size: Int? = null) {
 
@@ -29,6 +32,7 @@ class aRandomListOf<out T : Any>(private val size: Int? = null) {
 /**
  * A delegate which creates a random object of the specified type. It must be used as a delegate
  * using the delegate property syntax:
+ *
  * val aUser by aRandom<User>()
  *
  * It works with generic types as well.
