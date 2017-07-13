@@ -1,0 +1,41 @@
+group 'memoizr'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.1.3'
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://kotlin.bintray.com/kotlinx' }
+        maven { url "http://dl.bintray.com/kotlin/kotlin-dev" }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+sourceCompatibility = 1.8
+
+repositories {
+    maven { url "https://jitpack.io" }
+    maven { url 'https://kotlin.bintray.com/kotlinx' }
+    maven { url "http://dl.bintray.com/kotlin/kotlin-dev" }
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+
+    compile group: 'dom4j', name: 'dom4j', version: '1.6.1'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
+    compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
+    compile 'com.github.kategory:kategory:0.3.3'
+
+    testCompile 'com.github.memoizr:assertk-core:1.0.0-beta.2'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
