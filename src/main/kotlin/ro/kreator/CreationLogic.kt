@@ -65,7 +65,6 @@ internal object CreationLogic : Reify() {
         o[File::class.starProjectedType] = { _, _, token -> File(aString(token)) }
     }
 
-
     internal object ObjectFactory {
         private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, Token) -> Any>()
 

@@ -6,6 +6,11 @@ import ro.kreator.CreationLogic.instantiateClass
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KProperty
 
+/**
+ * A delegate which creates a random list of the specified type. It must be used as a delegate
+ * using the delegate property syntax:
+ * val randomUsers by aRandomListOf<User>()
+ */
 class aRandomListOf<out T : Any>(private val size: Int? = null) {
 
     init {
@@ -21,6 +26,13 @@ class aRandomListOf<out T : Any>(private val size: Int? = null) {
     }
 }
 
+/**
+ * A delegate which creates a random object of the specified type. It must be used as a delegate
+ * using the delegate property syntax:
+ * val aUser by aRandom<User>()
+ *
+ * It works with generic types as well.
+ */
 class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
 
     init {

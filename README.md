@@ -1,7 +1,7 @@
-# random-object-kreator
-Creates any arbitrary random object for your test data
+# Random Object Kreator
+Creates any arbitrary random object for your test data. The name is annoying as it uses a k instead of a c because it'a Kotlin library.
 
-###Usage
+### Usage
 
 ```kotlin
 class MyTest {
