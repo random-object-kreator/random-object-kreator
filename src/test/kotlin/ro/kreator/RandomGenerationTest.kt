@@ -90,11 +90,6 @@ class RandomGenerationTest {
 
     val x by customize<BigDecimal>().using<Long>(::BigDecimal) { it[any()] }
 
-    @Before
-    fun xx() {
-        x == null
-    }
-
     @Test
     fun `it allows to customize object creation`() {
         x
