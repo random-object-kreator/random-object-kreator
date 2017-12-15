@@ -7,6 +7,7 @@ import java.io.File
 import java.lang.reflect.Array.newInstance
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.lang.reflect.TypeVariable
 import java.security.MessageDigest
 import java.util.*
 import kotlin.reflect.KClass
@@ -204,7 +205,8 @@ internal object CreationLogic : Reify() {
         defaultConstructor.isAccessible = true
         val params = type.arguments.toMutableList()
         val parameters = (defaultConstructor.parameters.map {
-            val tpe = if (it.type.jvmErasure == Any::class) params.removeAt(0).type ?: it.type else it.type
+            fun isTypeVariable() = it.type.javaType is TypeVariable<*>
+            val tpe = if (isTypeVariable()) params.removeAt(0).type ?: it.type else it.type
             instantiateClass(tpe, token.hash with tpe.jvmErasure.hash with it.hash, past.plus(klass))
         }).toTypedArray()
         try {

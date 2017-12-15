@@ -5,7 +5,6 @@ import com.memoizr.assertk.expect
 import com.memoizr.assertk.notNull
 import com.memoizr.assertk.of
 import org.junit.Test
-import java.security.MessageDigest
 
 object CustomizationForTest : Customizer {
     val a by customize<Pair<Int, Int>>().using<Int, Int>(::Pair) { it[3, 4] }

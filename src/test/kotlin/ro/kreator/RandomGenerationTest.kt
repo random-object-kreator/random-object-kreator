@@ -167,6 +167,7 @@ class RandomGenerationTest {
     @Test
     fun `create a map`() {
         expect that aMap.size isGreaterThan 0
+        expect that aMap[aMap.keys.first()] isInstance of<SimpleClass>()
     }
 
     val aSealedClass by aRandom<SealedClass>()

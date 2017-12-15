@@ -53,6 +53,36 @@ val aUser by aRandom<User> { copy(name = "Forrest") }
 ```
 
 #### Random selection of interface implementation
+If you ask for an interface, and in your module you have classes that implement that interface, one of these implementations will be randomly picked and instantiated.
+
+Example:
+
+```kotlin
+interface Foo
+class Bar() : Foo
+class Baz() : Foo
+
+val aFoo1 by aRandom<Foo>()
+val aFoo2 by aRandom<Foo>()
+val aFoo3 by aRandom<Foo>()
+val aFoo4 by aRandom<Foo>()
+
+aFoo1::class.simpleName // Baz
+aFoo2::class.simpleName // Bar
+aFoo3::class.simpleName // Bar
+aFoo4::class.simpleName // Baz
+```
+
+
+#### Random implementation of interfaces with no implementation in module
+```kotlin
+If you ask for an interface wich has no concrete implementation in the module, the library will create a random implementation.
+
+interface Foo {
+    fun doSomething:
+}
+```
+
 
 #### Random implementation of interfaces with no implementation in module
 
