@@ -203,11 +203,13 @@ internal object CreationLogic : Reify() {
         if (constructors.isEmpty() && klass.constructors.any { it.parameters.any { (it.type.jvmErasure == klass) } }) throw CyclicException()
         val defaultConstructor = constructors[pseudoRandom(token).int(constructors.size)] as KFunction<*>
         defaultConstructor.isAccessible = true
-        val params = type.arguments.toMutableList()
-        val parameters = (defaultConstructor.parameters.map {
-            fun isTypeVariable() = it.type.javaType is TypeVariable<*>
-            val tpe = if (isTypeVariable()) params.removeAt(0).type ?: it.type else it.type
-            instantiateClass(tpe, token.hash with tpe.jvmErasure.hash with it.hash, past.plus(klass))
+        val constructorTypeParameters = defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList()
+        val typeMap = type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap()
+        val pairedConstructor = defaultConstructor.parameters.map { if (it.type.javaType is TypeVariable<*>) constructorTypeParameters.get(it.index) to it else "" to it }
+        val parameters = (pairedConstructor.map {
+            fun isTypeVariable() = it.second.type.javaType is TypeVariable<*>
+            val tpe = if (isTypeVariable()) typeMap[it.first]?.type ?: it.second.type else it.second.type
+            instantiateClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass))
         }).toTypedArray()
         try {
             val res = defaultConstructor.call(*parameters)
