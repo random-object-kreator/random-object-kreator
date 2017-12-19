@@ -37,7 +37,7 @@ class Test2 {
         expect that aRandomClip.thumbnail.media isInstance of<Image>()
     }
 
-    val aFunkyVisual by aRandom<FunkyVisual<Video, Image>>()
+    val aFunkyVisual by aRandom<FunkyVisual<Video, Image>>{ copy(y = "hello")}
     val aFunkyVisualJava by aRandom<FunkyVisualJava<Video, Image>>()
 
     @Test
@@ -48,5 +48,6 @@ class Test2 {
         expect that aFunkyVisual.v isInstance of<Video>()
         expect that aFunkyVisual.y isInstance of<String>()
         expect that aFunkyVisualJava.image isInstance of<Image>()
+        expect that aFunkyVisual.y isEqualTo "hello"
     }
 }

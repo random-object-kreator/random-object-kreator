@@ -51,8 +51,8 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
         else instantiateClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash).let {
             lastSeed = Seed.seed
             val res = it as T
-            t = res
-            customization(res)
+            t = customization(res)
+            return t as T
         }
     }
 }
