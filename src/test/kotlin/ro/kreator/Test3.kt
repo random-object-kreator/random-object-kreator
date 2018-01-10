@@ -1,5 +1,6 @@
 package ro.kreator
 
+import com.memoizr.assertk.expect
 import org.junit.Test
 import java.io.Serializable
 
@@ -49,6 +50,6 @@ class Test3 {
 
     @Test
     fun `it works`() {
-        sendOptions.print()
+        expect that sendOptions.all { it is SendOption } _is true
     }
 }
