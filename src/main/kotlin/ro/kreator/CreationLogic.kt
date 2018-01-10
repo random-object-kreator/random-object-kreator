@@ -13,6 +13,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
@@ -167,7 +168,10 @@ internal object CreationLogic : Reify() {
                 .apply { classesMap.put(klass, this) }
 
         return allImplementationsInModule.getOrNull(pseudoRandom(token).int(allImplementationsInModule.size))
-                ?.let { instantiateClass(it.kotlin.createType(), token.hash with it.name.hash) }
+                ?.let {
+                    val params = it.kotlin.typeParameters.map { KTypeProjection(it.variance, it.starProjectedType) }
+                    instantiateClass(it.kotlin.createType(params), token.hash with it.name.hash)
+                }
                 ?: instantiateNewInterface(klass, token, past)
     }
 
