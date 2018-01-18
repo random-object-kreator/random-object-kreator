@@ -198,6 +198,23 @@ class RandomGenerationTest {
         expect that anArrayClass.boolean[0] isInstance of<Boolean>()
     }
 
+    interface InterfaceWithGenericTypes<A, B> {
+        fun getLong(): Long
+        fun getB(): B
+        fun getA(): List<A>
+        fun getSimpleClass(): SimpleClass
+    }
+
+    val genericInterface by aRandom<InterfaceWithGenericTypes<List<String>, Int>>()
+
+    @Test
+    fun `it instantiates a random generic interface`() {
+        expect that genericInterface.getA().first().first() isInstance of<String>()
+        expect that genericInterface.getB() isInstance of<Int>()
+        expect that genericInterface.getLong() isInstance of<Long>()
+        expect that genericInterface.getSimpleClass() isInstance of<SimpleClass>()
+    }
+
     val interfaceImpl by aRandom<InterfaceWithNoImplementations>()
 
     @Test

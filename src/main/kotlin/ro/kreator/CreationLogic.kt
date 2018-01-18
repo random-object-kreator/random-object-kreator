@@ -17,6 +17,7 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.internal.ReflectProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.javaType
@@ -31,6 +32,7 @@ internal object CreationLogic : Reify() {
         fun <T : Any> list(klass: KClass<T>, token: Token, past: Set<KClass<*>>): List<T> = aList(klass.createType(), token, past) as List<T>
         fun map(type: KType, token: Token, past: Set<KClass<*>>) = list(type, token, past)
                 .map { Pair(it, instantiateClass(type.arguments[1].type!!, token)) }.toMap()
+
         val o = ObjectFactory
 
         o[kotlin.String::class().type] = { _, _, token -> aString(token) }
@@ -146,7 +148,7 @@ internal object CreationLogic : Reify() {
             klass.isAnObject() -> klass.objectInstance
             klass.isAnEnum() -> klass.java.enumConstants[anInt(token, max = klass.java.enumConstants.size)]
             klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass)
-            klass.isAnInterfaceOrSealed() -> instantiateInterface(klass, token, parentClasses)
+            klass.isAnInterfaceOrSealed() -> instantiateInterface(type, token, parentClasses)
             else -> instantiateArbitraryClass(klass, token, type, parentClasses)
         }
     }
@@ -158,10 +160,12 @@ internal object CreationLogic : Reify() {
         return array.apply { list.forEachIndexed { index, any -> array[index] = any } }
     }
 
-    private fun instantiateInterface(klass: KClass<out Any>, token: Token, past: Set<KClass<*>>): Any {
+    private fun instantiateInterface(type: KType, token: Token, past: Set<KClass<*>>): Any {
         val allClassesInModule = if (classes.isEmpty())
             Reflections("", SubTypesScanner(false)).getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
         else classes
+
+        val klass = type.jvmErasure
 
         val allImplementationsInModule = classesMap[klass] ?: allClassesInModule
                 .filter { klass.java != it && klass.java.isAssignableFrom(it) }
@@ -172,19 +176,37 @@ internal object CreationLogic : Reify() {
                     val params = it.kotlin.typeParameters.map { KTypeProjection(it.variance, it.starProjectedType) }
                     instantiateClass(it.kotlin.createType(params), token.hash with it.name.hash)
                 }
-                ?: instantiateNewInterface(klass, token, past)
+                ?: instantiateNewInterface(type, token, past)
     }
 
-    private fun instantiateNewInterface(klass: KClass<*>, token: Token, past: Set<KClass<*>>): Any {
-        val kMembers = klass.members.plus(Object::class.members)
+    private fun instantiateNewInterface(type: KType, token: Token, past: Set<KClass<*>>): Any {
+
+        val klass = type.jvmErasure
+        val genericTypeNameToConcreteTypeMap = klass.typeParameters.map { it.name }.zip(type.arguments).toMap()
+
+        fun degenerify(kType: KType): KType {
+            return if (kType.arguments.isEmpty()) genericTypeNameToConcreteTypeMap[kType.javaType.typeName]?.type ?: kType
+            else {
+                val argumentField = kType::class.java.declaredFields.find { it.name == "${kType::arguments.name}\$delegate" }!!
+                argumentField.isAccessible = true
+                val degenerifiedArguments = kType.arguments.map { KTypeProjection(it.variance, degenerify(it.type!!))}
+                val newFieldValue = ReflectProperties.lazySoft { degenerifiedArguments  }
+                argumentField.set(kType, newFieldValue)
+                kType
+            }
+        }
+
         val javaMethods: Array<Method> = klass.java.methods + Any::class.java.methods
+
         val methodReturnTypes = javaMethods.map { method ->
-            val returnType = kMembers.find { member ->
+            val returnType = klass.members.find { member ->
                 fun hasNameName(): Boolean = (method.name == member.name || method.name == "get${member.name.capitalize()}")
                 fun hasSameArguments() = method.parameters.map { it.parameterizedType } == member.valueParameters.map { it.type.javaType }
                 hasNameName() && hasSameArguments()
-            }?.returnType
-            method to returnType
+            }?.returnType?.let { degenerify(it) }
+
+            val type1 = genericTypeNameToConcreteTypeMap[returnType?.jvmErasure?.simpleName]?.type
+            method to (type1 ?: returnType)
         }.toMap()
 
         return Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java)) { proxy, method, obj ->
@@ -193,7 +215,7 @@ internal object CreationLogic : Reify() {
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
                 else -> methodReturnTypes[method]?.let { instantiateClass(it, token, past) } ?:
-                        instantiateClass(method.returnType.kotlin.createType(), token, past)
+                        instantiateClass(method.returnType.kotlin.createType().print(), token, past)
             }
         }
     }
