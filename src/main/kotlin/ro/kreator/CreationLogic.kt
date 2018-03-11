@@ -131,7 +131,7 @@ internal object CreationLogic : Reify() {
         }
     }
 
-    fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet()): Any? {
+    internal fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet()): Any? {
         val klass = type.jvmErasure
         parentClasses.shouldNotContain(klass)
 
