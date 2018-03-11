@@ -31,7 +31,7 @@ internal object CreationLogic : Reify() {
         fun list(type: KType, token: Token, past: Set<KClass<*>>) = aList(type.arguments.first().type!!, token, past.plus(type.jvmErasure))
         fun <T : Any> list(klass: KClass<T>, token: Token, past: Set<KClass<*>>): List<T> = aList(klass.createType(), token, past) as List<T>
         fun map(type: KType, token: Token, past: Set<KClass<*>>) = list(type, token, past)
-                .map { Pair(it, instantiateClass(type.arguments[1].type!!, token)) }.toMap()
+                .map { Pair(it, instantiateRandomClass(type.arguments[1].type!!, token)) }.toMap()
 
         val o = ObjectFactory
 
@@ -127,11 +127,11 @@ internal object CreationLogic : Reify() {
         return items.map {
             if (klass == List::class) {
                 aList(type.arguments.first().type!!, token.hash with it.hash, parentClasses)
-            } else instantiateClass(type, token.hash with it.hash, parentClasses)
+            } else instantiateRandomClass(type, token.hash with it.hash, parentClasses)
         }
     }
 
-    internal fun instantiateClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet()): Any? {
+    fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet()): Any? {
         val klass = type.jvmErasure
         parentClasses.shouldNotContain(klass)
 
@@ -174,7 +174,7 @@ internal object CreationLogic : Reify() {
         return allImplementationsInModule.getOrNull(pseudoRandom(token).int(allImplementationsInModule.size))
                 ?.let {
                     val params = it.kotlin.typeParameters.map { KTypeProjection(it.variance, it.starProjectedType) }
-                    instantiateClass(it.kotlin.createType(params), token.hash with it.name.hash)
+                    instantiateRandomClass(it.kotlin.createType(params), token.hash with it.name.hash)
                 }
                 ?: instantiateNewInterface(type, token, past)
     }
@@ -214,8 +214,8 @@ internal object CreationLogic : Reify() {
                 Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-                else -> methodReturnTypes[method]?.let { instantiateClass(it, token, past) } ?:
-                        instantiateClass(method.returnType.kotlin.createType().print(), token, past)
+                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
+                        instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
             }
         }
     }
@@ -235,7 +235,7 @@ internal object CreationLogic : Reify() {
         val parameters = (pairedConstructor.map {
             fun isTypeVariable() = it.second.type.javaType is TypeVariable<*>
             val tpe = if (isTypeVariable()) typeMap[it.first]?.type ?: it.second.type else it.second.type
-            instantiateClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass))
+            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass))
         }).toTypedArray()
         try {
             val res = defaultConstructor.call(*parameters)

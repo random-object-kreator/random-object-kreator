@@ -2,7 +2,7 @@ package ro.kreator
 
 import ro.kreator.CreationLogic.aList
 import ro.kreator.CreationLogic.hash
-import ro.kreator.CreationLogic.instantiateClass
+import ro.kreator.CreationLogic.instantiateRandomClass
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KProperty
 
@@ -48,7 +48,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash).let {
+        else instantiateRandomClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)

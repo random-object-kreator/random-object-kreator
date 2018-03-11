@@ -1,7 +1,7 @@
 package ro.kreator
 
 import ro.kreator.CreationLogic.hash
-import ro.kreator.CreationLogic.instantiateClass
+import ro.kreator.CreationLogic.instantiateRandomClass
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -60,7 +60,7 @@ sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<
     }
 
     fun <A> new(type: KType, token: Token): A {
-        return instantiateClass(type, token.hash with type.hash) as A
+        return instantiateRandomClass(type, token.hash with type.hash) as A
     }
 }
 
