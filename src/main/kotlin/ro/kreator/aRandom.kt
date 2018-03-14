@@ -56,6 +56,34 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
             return t as T
         }
     }
+
+    /**
+     * A delegate which creates a random object of the specified type. It must be used as a delegate
+     * using the delegate property syntax:
+     *
+     * val aUser by aRandom<User>()
+     *
+     * It works with generic types as well.
+     */
+    class aRandom<out T : Any>(private val type: KType, private val customization: T.() -> T = { this }) {
+
+        init {
+            CreationLogic
+        }
+
+        private var t: T? = null
+        private var lastSeed = Seed.seed
+
+        operator fun getValue(hostClass: Any, property: KProperty<*>): T {
+            return if (t != null && lastSeed == Seed.seed) t!!
+            else instantiateRandomClass(type, hostClass::class.java.canonicalName.hash with property.name.hash).let {
+                lastSeed = Seed.seed
+                val res = it as T
+                t = customization(res)
+                return t as T
+            }
+        }
+    }
 }
 
 fun instantiateRandomClass(type: KType): Any? = CreationLogic.instantiateRandomClass(type)
