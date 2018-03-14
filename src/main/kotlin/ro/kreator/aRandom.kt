@@ -67,7 +67,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
  *
  * It works with generic types as well.
  */
-class aRandom<out T : Any>(private val type: KType, private val customization: T.() -> T = { this }) {
+class aRandomFromType<out T : Any>(private val type: KType, private val customization: T.() -> T = { this }) {
 
     init {
         CreationLogic
