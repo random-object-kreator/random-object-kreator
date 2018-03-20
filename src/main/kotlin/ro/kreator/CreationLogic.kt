@@ -67,6 +67,7 @@ internal object CreationLogic : Reify() {
         o[kotlin.collections.Map::class.starProjectedType] = { type, past, token -> map(type, token, past) }
 
         o[File::class.starProjectedType] = { _, _, token -> File(aString(token)) }
+        o[Date::class.starProjectedType] = {_, _, token -> Date(aLong(token)) }
     }
 
     internal object ObjectFactory {
