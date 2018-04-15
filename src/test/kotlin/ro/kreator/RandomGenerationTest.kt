@@ -22,6 +22,7 @@ class RandomGenerationTest {
     val aClassWithMutableList by aRandom<ClassWithMutableList>()
     val aJavaClassWithList by aRandom<JavaClassWithList>()
     val aClassWithPrimitives by aRandom<ClassWithPrimitives>()
+    val aDate by aRandom<Date>()
 
     @Before
     fun setUp() {
@@ -33,6 +34,11 @@ class RandomGenerationTest {
         expect that aSimpleClass isInstance of<SimpleClass>()
         expect that aSimpleClass.name.length isBetween 1..20
         expect that aSimpleClass.name isEqualTo aSimpleClass.name
+    }
+
+    @Test
+    fun `creates a date`() {
+        expect that aDate isInstance of<Date>()
     }
 
     @Test
