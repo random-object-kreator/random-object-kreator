@@ -18,11 +18,8 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.*
 import kotlin.reflect.jvm.internal.ReflectProperties
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaMethod
-import kotlin.reflect.jvm.javaType
-import kotlin.reflect.jvm.jvmErasure
 
 typealias Token = Long
 
@@ -203,7 +200,7 @@ internal object CreationLogic : Reify() {
         val methodReturnTypes = javaMethods.map { method ->
             val returnType = klass.members.find { member ->
                 fun hasNameName(): Boolean = (method.name == member.name || method.name == "get${member.name.capitalize()}")
-                fun hasSameArguments() = method.parameterTypes.map { it.typeName } == member.valueParameters.map { it.type.javaType.typeName }
+                fun hasSameArguments() = method.parameterTypes.map { it.name } == member.valueParameters.map { it.type.jvmErasure.jvmName }
                 hasNameName() && hasSameArguments()
             }?.returnType?.let { degenerify(it) }
 
