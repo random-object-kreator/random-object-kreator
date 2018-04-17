@@ -228,6 +228,7 @@ class RandomGenerationTest {
     }
 
     val genericAbstractClass by aRandom<AnAbstractClass>()
+
     @Test
     fun `it instantiate an abstract class`() {
         expect that genericAbstractClass.getString() isInstance of<String>()
