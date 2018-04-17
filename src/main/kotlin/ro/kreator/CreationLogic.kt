@@ -1,12 +1,13 @@
 package ro.kreator
 
+import javassist.util.proxy.ProxyFactory
+import javassist.util.proxy.ProxyObject
 import org.apache.commons.lang3.RandomStringUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import java.io.File
 import java.lang.reflect.Array.newInstance
 import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import java.lang.reflect.TypeVariable
 import java.security.MessageDigest
 import java.util.*
@@ -136,7 +137,7 @@ internal object CreationLogic : Reify() {
         val klass = type.jvmErasure
         parentClasses.shouldNotContain(klass)
 
-        fun KClass<out Any>.isAnInterfaceOrSealed() = this.java.isInterface || this.isSealed
+        fun KClass<out Any>.isAnInterfaceOrSealed() = this.java.isInterface || this.isSealed || this.isAbstract
         fun KClass<out Any>.isAnArray() = this.java.isArray
         fun KClass<out Any>.isAnEnum() = this.java.isEnum
         fun KClass<out Any>.isAnObject() = this.objectInstance != null
@@ -210,7 +211,15 @@ internal object CreationLogic : Reify() {
             method to (type1 ?: returnType)
         }.toMap()
 
-        return Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java)) { proxy, method, obj ->
+        val factory = ProxyFactory()
+        if (klass.java.isInterface) {
+            factory.interfaces = arrayOf(klass.java)
+        } else {
+            factory.superclass = klass.java
+        }
+        val proxy = factory.createClass().newInstance()
+
+        (proxy as ProxyObject).setHandler({ proxy, method, proceed, obj ->
             when (method.name) {
                 Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
@@ -218,7 +227,19 @@ internal object CreationLogic : Reify() {
                 else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
                         instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
             }
-        }
+        })
+        return proxy
+
+
+//        return Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java)) { proxy, method, obj ->
+//            when (method.name) {
+//                Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
+//                Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
+//                Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
+//                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
+//                        instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
+//            }
+//        }
     }
 
     private fun Set<KClass<*>>.shouldNotContain(klass: KClass<*>) {

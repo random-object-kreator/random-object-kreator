@@ -221,6 +221,19 @@ class RandomGenerationTest {
         expect that genericInterface.getSimpleClass() isInstance of<SimpleClass>()
     }
 
+
+    abstract class AnAbstractClass {
+        abstract fun getString(): String
+        fun getValue() = "value"
+    }
+
+    val genericAbstractClass by aRandom<AnAbstractClass>()
+    @Test
+    fun `it instantiate an abstract class`() {
+        expect that genericAbstractClass.getString() isInstance of<String>()
+        expect that genericAbstractClass.getValue() isEqualToIgnoringCase "value"
+    }
+
     val interfaceImpl by aRandom<InterfaceWithNoImplementations>()
 
     @Test
