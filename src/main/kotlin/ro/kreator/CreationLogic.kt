@@ -203,7 +203,7 @@ internal object CreationLogic : Reify() {
         val methodReturnTypes = javaMethods.map { method ->
             val returnType = klass.members.find { member ->
                 fun hasNameName(): Boolean = (method.name == member.name || method.name == "get${member.name.capitalize()}")
-                fun hasSameArguments() = method.parameters.map { it.parameterizedType } == member.valueParameters.map { it.type.javaType }
+                fun hasSameArguments() = method.parameterTypes.map { it.typeName } == member.valueParameters.map { it.type.javaType.typeName }
                 hasNameName() && hasSameArguments()
             }?.returnType?.let { degenerify(it) }
 
