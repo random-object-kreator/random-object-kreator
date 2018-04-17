@@ -2,7 +2,10 @@
 
 package ro.kreator
 
-import com.memoizr.assertk.*
+import com.memoizr.assertk.expect
+import com.memoizr.assertk.isInstance
+import com.memoizr.assertk.notNull
+import com.memoizr.assertk.of
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -10,7 +13,7 @@ import java.math.BigDecimal
 import java.util.*
 
 class RandomGenerationTest {
-    val aSimpleClass by aRandom<SimpleClass>()
+    val aSimpleClass by aRandom<SimpleClass>(nonEmpty = true)
     val anotherSimpleClass by aRandom<SimpleClass>()
     val aNullableClass by aRandom<NullableClass>()
     val aRecursiveClass by aRandom<RecursiveClass>()
@@ -22,6 +25,7 @@ class RandomGenerationTest {
     val aClassWithMutableList by aRandom<ClassWithMutableList>()
     val aJavaClassWithList by aRandom<JavaClassWithList>()
     val aClassWithPrimitives by aRandom<ClassWithPrimitives>()
+    val aClassWithListAndParams by aRandom<ClassWithListAndParam>()
     val aDate by aRandom<Date>()
 
     @Before
@@ -32,7 +36,7 @@ class RandomGenerationTest {
     @Test
     fun `creates an arbitrary data class`() {
         expect that aSimpleClass isInstance of<SimpleClass>()
-        expect that aSimpleClass.name.length isBetween 1..20
+        expect that aSimpleClass.name.length isBetween 0..20
         expect that aSimpleClass.name isEqualTo aSimpleClass.name
     }
 
@@ -43,10 +47,10 @@ class RandomGenerationTest {
 
     @Test
     fun `returns different results for different seeds`() {
-        (1..100).map {
+        expect that (1..100).map {
             Seed.seed = Random().nextLong()
             aSimpleClass.name
-        }.toSet().size isEqualTo 100
+        }.toSet().size isCloseTo 100 withinPercentage 10
     }
 
     @Test
@@ -94,6 +98,25 @@ class RandomGenerationTest {
         expect that aClassWithEnum.enum isInstance of<TheEnum>()
     }
 
+    @Test
+    fun `it generates empty lists`() {
+        val listSizes = (1..1000).map {
+            Seed.seed = Random().nextLong()
+            aClassWithListAndParams.list.size
+        }.toSet()
+
+        val stringSizes = (1..1000).map {
+            Seed.seed = Random().nextLong()
+            aClassWithListAndParams.param.length
+        }.toSet()
+
+        expect that listSizes hasSize 5
+        expect that listSizes contains hashSetOf(0)
+
+        expect that stringSizes hasSize 20
+        expect that stringSizes contains hashSetOf(0)
+    }
+
     val x by customize<BigDecimal>().using<Long>(::BigDecimal) { it[any()] }
 
     @Test
@@ -128,8 +151,8 @@ class RandomGenerationTest {
         expect thatThrownBy { aCyclicClass } hasMessageContaining "cyclic"
     }
 
-    val aRandomList by aRandomListOf<SimpleClass>()
-    val aRandomListOfList by aRandomListOf<List<List<SimpleClass>>>()
+    val aRandomList by aRandomListOf<SimpleClass>(nonEmpty = true)
+    val aRandomListOfList by aRandomListOf<List<List<SimpleClass>>>(nonEmpty = true)
     val aRandomListSize10 by aRandomListOf<SimpleClass>(size = 10)
 
     @Test
@@ -161,14 +184,14 @@ class RandomGenerationTest {
         expect that aPair.second isInstance of<Int>()
     }
 
-    val aSet by aRandom<Set<Set<String>>>()
+    val aSet by aRandom<Set<Set<String>>>(nonEmpty = true)
 
     @Test
     fun `creates a set`() {
         expect that aSet.size isGreaterThan 0
     }
 
-    val aMap by aRandom<Map<String, SimpleClass>>()
+    val aMap by aRandom<Map<String, SimpleClass>>(nonEmpty = true)
 
     @Test
     fun `create a map`() {
@@ -197,7 +220,7 @@ class RandomGenerationTest {
         expect that aFile _is notNull
     }
 
-    val anArrayClass by aRandom<ClassWithArrays>()
+    val anArrayClass by aRandom<ClassWithArrays>(nonEmpty = true)
 
     @Test
     fun `it works with arrays`() {
@@ -211,7 +234,7 @@ class RandomGenerationTest {
         fun getSimpleClass(): SimpleClass
     }
 
-    val genericInterface by aRandom<InterfaceWithGenericTypes<List<String>, Int>>()
+    val genericInterface by aRandom<InterfaceWithGenericTypes<List<String>, Int>>(nonEmpty = true)
 
     @Test
     fun `it instantiates a random generic interface`() {

@@ -15,7 +15,9 @@ import kotlin.reflect.KType
  *
  * It works with generic types as well.
  */
-class aRandomListOf<out T : Any>(private val size: Int? = null) {
+class aRandomListOf<out T : Any>(
+        private val nonEmpty: Boolean = false,
+        private val size: Int? = null) {
 
     init {
         CreationLogic
@@ -25,7 +27,7 @@ class aRandomListOf<out T : Any>(private val size: Int? = null) {
         val typeOfListItems = property.returnType.arguments.first().type!!
         val hostClassName = host::class.java.canonicalName
         val propertyName = property.name
-        val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash , emptySet(), size?.dec())
+        val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash , emptySet(), size, nonEmpty)
         return list as List<T>
     }
 }
@@ -38,7 +40,9 @@ class aRandomListOf<out T : Any>(private val size: Int? = null) {
  *
  * It works with generic types as well.
  */
-class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
+class aRandom<out T : Any>(
+        private val nonEmpty: Boolean = false,
+        private val customization: T.() -> T = { this }) {
 
     init {
         CreationLogic
@@ -49,7 +53,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateRandomClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash).let {
+        else instantiateRandomClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash, nonEmpty = nonEmpty).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)
