@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-
+    compile project(":data")
     compile group: 'dom4j', name: 'dom4j', version: '1.6.1'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"

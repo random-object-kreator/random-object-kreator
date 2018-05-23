@@ -3,6 +3,7 @@
 package ro.kreator
 
 import com.memoizr.assertk.*
+import ko.kreator.SealedClassWithFields
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -177,10 +178,12 @@ class RandomGenerationTest {
     }
 
     val aSealedClass by aRandom<SealedClass>()
+    val aSealedClassWithFields by aRandom<SealedClassWithFields>()
 
     @Test
     fun `creates sealed classes`() {
         expect that aSealedClass isInstance of<SealedClass>()
+        expect that aSealedClassWithFields isInstance of<SealedClassWithFields>()
     }
 
     val aFooBar by aRandom<Fooed>()

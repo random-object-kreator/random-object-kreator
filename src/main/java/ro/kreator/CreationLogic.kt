@@ -5,6 +5,7 @@ import javassist.util.proxy.ProxyObject
 import org.apache.commons.lang3.RandomStringUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
+import sun.reflect.ReflectionFactory
 import java.io.File
 import java.lang.reflect.Array.newInstance
 import java.lang.reflect.Method
@@ -18,8 +19,11 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.*
 import kotlin.reflect.jvm.internal.ReflectProperties
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 typealias Token = Long
 
@@ -200,7 +204,7 @@ internal object CreationLogic : Reify() {
         val methodReturnTypes = javaMethods.map { method ->
             val returnType = klass.members.find { member ->
                 fun hasNameName(): Boolean = (method.name == member.name || method.name == "get${member.name.capitalize()}")
-                fun hasSameArguments() = method.parameterTypes.map { it.name } == member.valueParameters.map { it.type.jvmErasure.jvmName }
+                fun hasSameArguments() = method.parameters.map { it.parameterizedType } == member.valueParameters.map { it.type.javaType }
                 hasNameName() && hasSameArguments()
             }?.returnType?.let { degenerify(it) }
 
@@ -209,12 +213,16 @@ internal object CreationLogic : Reify() {
         }.toMap()
 
         val factory = ProxyFactory()
+        val proxy: Any?
         if (klass.java.isInterface) {
             factory.interfaces = arrayOf(klass.java)
+            proxy = factory.createClass().newInstance()
         } else {
             factory.superclass = klass.java
+            val reflectionFactory = ReflectionFactory.getReflectionFactory()
+            val constructor = reflectionFactory.newConstructorForSerialization(factory.createClass(), klass.java.getDeclaredConstructor())
+            proxy = constructor.newInstance()
         }
-        val proxy = factory.createClass().newInstance()
 
         (proxy as ProxyObject).setHandler({ proxy, method, proceed, obj ->
             when (method.name) {
@@ -226,17 +234,6 @@ internal object CreationLogic : Reify() {
             }
         })
         return proxy
-
-
-//        return Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java)) { proxy, method, obj ->
-//            when (method.name) {
-//                Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
-//                Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
-//                Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-//                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
-//                        instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
-//            }
-//        }
     }
 
     private fun Set<KClass<*>>.shouldNotContain(klass: KClass<*>) {

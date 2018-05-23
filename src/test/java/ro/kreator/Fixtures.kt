@@ -1,10 +1,12 @@
 package ro.kreator
 
+import java.io.Serializable
 import java.math.BigDecimal
 
 sealed class SealedClass
 data class One(val x: String) : SealedClass()
 data class Two(val x: String) : SealedClass()
+
 
 data class ProblematicConstructorClass(val x: String, val y: SimpleClass) {
     init {
