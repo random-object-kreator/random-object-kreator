@@ -5,6 +5,9 @@ import javassist.util.proxy.ProxyObject
 import org.apache.commons.lang3.RandomStringUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
+import org.reflections.util.ClasspathHelper
+import org.reflections.util.ConfigurationBuilder
+import org.reflections.util.FilterBuilder
 import java.io.File
 import java.lang.reflect.Array.newInstance
 import java.lang.reflect.Method
@@ -15,11 +18,14 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.*
 import kotlin.reflect.jvm.internal.ReflectProperties
+
+
 
 typealias Token = Long
 
@@ -160,9 +166,14 @@ internal object CreationLogic : Reify() {
     }
 
     private fun instantiateAbstract(type: KType, token: Token, past: Set<KClass<*>>): Any {
-        val allClassesInModule = if (classes.isEmpty())
-            Reflections("", SubTypesScanner(false)).getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
-        else classes
+        val allClassesInModule = if (classes.isEmpty()) {
+            val packages = (type.jvmErasure.allSuperclasses + type.jvmErasure).map { it.qualifiedName?.split(".")?.take(2)?.joinToString(".") }
+            val reflections = Reflections(ConfigurationBuilder()
+                    .setScanners(SubTypesScanner(false))
+                    .setUrls(ClasspathHelper.forClassLoader())
+                    .filterInputsBy(FilterBuilder().includePackage(*packages.print().toTypedArray())))
+            reflections.getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
+        } else classes
 
         val klass = type.jvmErasure
 
