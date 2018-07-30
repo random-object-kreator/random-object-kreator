@@ -147,7 +147,7 @@ internal object CreationLogic : Reify() {
             klass.isAnObject() -> klass.objectInstance
             klass.isAnEnum() -> klass.java.enumConstants[anInt(token, max = klass.java.enumConstants.size)]
             klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass)
-            klass.isAnInterfaceOrSealed() -> instantiateInterface(type, token, parentClasses)
+            klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, parentClasses)
             else -> instantiateArbitraryClass(klass, token, type, parentClasses)
         }
     }
@@ -159,7 +159,7 @@ internal object CreationLogic : Reify() {
         return array.apply { list.forEachIndexed { index, any -> array[index] = any } }
     }
 
-    private fun instantiateInterface(type: KType, token: Token, past: Set<KClass<*>>): Any {
+    private fun instantiateAbstract(type: KType, token: Token, past: Set<KClass<*>>): Any {
         val allClassesInModule = if (classes.isEmpty())
             Reflections("", SubTypesScanner(false)).getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
         else classes

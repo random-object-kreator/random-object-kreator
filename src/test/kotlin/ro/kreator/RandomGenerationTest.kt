@@ -180,7 +180,7 @@ class RandomGenerationTest {
 
     @Test
     fun `creates sealed classes`() {
-        expect that aSealedClass isInstance of<SealedClass>()
+        expect that aSealedClass.print() isInstance of<SealedClass>()
     }
 
     val aFooBar by aRandom<Fooed>()

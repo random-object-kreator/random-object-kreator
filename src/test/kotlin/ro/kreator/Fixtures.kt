@@ -2,9 +2,13 @@ package ro.kreator
 
 import java.math.BigDecimal
 
-sealed class SealedClass
-data class One(val x: String) : SealedClass()
-data class Two(val x: String) : SealedClass()
+interface SealedInterface {
+    val type get() = this::class.simpleName
+}
+sealed class SealedClass: SealedInterface {
+    data class One(val x: String) : SealedClass()
+    data class Two(val x: String) : SealedClass()
+}
 
 data class ProblematicConstructorClass(val x: String, val y: SimpleClass) {
     init {

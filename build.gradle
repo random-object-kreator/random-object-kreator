@@ -2,7 +2,7 @@ group 'memoizr'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.2.50'
 
     repositories {
         mavenCentral()
@@ -29,7 +29,7 @@ repositories {
 dependencies {
 
     compile group: 'dom4j', name: 'dom4j', version: '1.6.1'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
     compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
@@ -37,4 +37,19 @@ dependencies {
 
     testCompile 'com.github.memoizr:assertk-core:1.0.0-beta.2'
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
