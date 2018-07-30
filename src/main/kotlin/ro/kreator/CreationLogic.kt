@@ -167,18 +167,17 @@ internal object CreationLogic : Reify() {
 
     private fun instantiateAbstract(type: KType, token: Token, past: Set<KClass<*>>): Any {
         val allClassesInModule = if (classes.isEmpty()) {
-            val packages = (type.jvmErasure.allSuperclasses + type.jvmErasure).map { it.qualifiedName?.split(".")?.take(2)?.joinToString(".") }
-            val reflections = Reflections(ConfigurationBuilder()
-                    .setScanners(SubTypesScanner(false))
-                    .setUrls(ClasspathHelper.forClassLoader())
-                    .filterInputsBy(FilterBuilder().includePackage(*packages.print().toTypedArray())))
-            reflections.getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
+            getAndCacheClasses(type)
         } else classes
 
         val klass = type.jvmErasure
 
         val allImplementationsInModule = classesMap[klass] ?: allClassesInModule
                 .filter { klass.java != it && klass.java.isAssignableFrom(it) }
+                .let { if (it.isEmpty()) getAndCacheClasses(type)
+                        .filter { klass.java != it && klass.java.isAssignableFrom(it) }
+                    else it
+                }
                 .apply { classesMap.put(klass, this) }
 
         return allImplementationsInModule.getOrNull(pseudoRandom(token).int(allImplementationsInModule.size))
@@ -187,6 +186,15 @@ internal object CreationLogic : Reify() {
                     instantiateRandomClass(it.kotlin.createType(params), token.hash with it.name.hash)
                 }
                 ?: instantiateNewInterface(type, token, past)
+    }
+
+    private fun getAndCacheClasses(type: KType): Set<Class<out Any>> {
+        val packages = (type.jvmErasure.allSuperclasses + type.jvmErasure).map { it.qualifiedName?.split(".")?.take(2)?.joinToString(".") }
+        val reflections = Reflections(ConfigurationBuilder()
+                .setScanners(SubTypesScanner(false))
+                .setUrls(ClasspathHelper.forClassLoader())
+                .filterInputsBy(FilterBuilder().includePackage(*packages.toTypedArray())))
+        return reflections.getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
     }
 
     private fun instantiateNewInterface(type: KType, token: Token, past: Set<KClass<*>>): Any {
@@ -233,21 +241,10 @@ internal object CreationLogic : Reify() {
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
                 else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
-                        instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
+                        instantiateRandomClass(method.returnType.kotlin.createType(), token, past)
             }
         })
         return proxy
-
-
-//        return Proxy.newProxyInstance(klass.java.classLoader, arrayOf(klass.java)) { proxy, method, obj ->
-//            when (method.name) {
-//                Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
-//                Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
-//                Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-//                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
-//                        instantiateRandomClass(method.returnType.kotlin.createType().print(), token, past)
-//            }
-//        }
     }
 
     private fun Set<KClass<*>>.shouldNotContain(klass: KClass<*>) {

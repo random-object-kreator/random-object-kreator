@@ -1,7 +1,6 @@
 package ro.kreator
 
 import com.emoticast.sparktswagger.Sealed
-import java.io.Serializable
 import java.math.BigDecimal
 
 interface SealedInterface {

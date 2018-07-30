@@ -15,7 +15,7 @@ import kotlin.reflect.KType
  *
  * It works with generic types as well.
  */
-class aRandomListOf<out T : Any>(private val size: Int? = null) {
+class aRandomListOf<out T : Any>(private val size: Int? = null, private val customization: List<T>.() -> List<T> = {this}) {
 
     init {
         CreationLogic
@@ -26,7 +26,7 @@ class aRandomListOf<out T : Any>(private val size: Int? = null) {
         val hostClassName = host::class.java.canonicalName
         val propertyName = property.name
         val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash , emptySet(), size?.dec())
-        return list as List<T>
+        return (list as List<T>).let { it.customization() }
     }
 }
 

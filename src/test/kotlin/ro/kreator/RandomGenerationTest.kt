@@ -139,6 +139,13 @@ class RandomGenerationTest {
         expect that aRandomListSize10.size isEqualTo 10
     }
 
+    val aCustomList by aRandomListOf<SimpleClass> { map { it.copy(name = "foo") } }
+
+    @Test
+    fun `lists can be customized`() {
+        expect that aCustomList.all { it.name == "foo" } _is true
+    }
+
     val aClassWithInterface by aRandom<AClassWithInterface>()
 
     @Test
