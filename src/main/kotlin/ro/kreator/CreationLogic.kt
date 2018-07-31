@@ -122,12 +122,15 @@ internal object CreationLogic : Reify() {
         return this * 31 + other
     }
 
-    internal fun aList(type: KType, token: Long, parentClasses: Set<KClass<*>>, size: Int? = null): List<*> {
+    internal fun aList(type: KType, token: Long, parentClasses: Set<KClass<*>>,
+                       size: Int? = null,
+                       minSize: Int = 1,
+                       maxSize: Int = 5): List<*> {
         val klass = type.jvmErasure
 
         parentClasses.shouldNotContain(klass)
 
-        val items = 0..(size ?: pseudoRandom(token).nextInt(5))
+        val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize-minSize) + minSize))
 
         return items.map {
             if (klass == List::class) {

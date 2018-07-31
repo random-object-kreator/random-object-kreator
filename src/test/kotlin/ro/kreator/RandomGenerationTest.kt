@@ -109,6 +109,35 @@ class RandomGenerationTest {
         expect that aJavaClassWithList isEqualTo aJavaClassWithList
     }
 
+    val listOfMinSize by aRandomListOf<SimpleClass>(minSize=3)
+
+    @Test
+    fun `it generates list of min size`() {
+        (1..1000).map {
+            Seed.seed = Random().nextLong()
+            expect that listOfMinSize.size isGreaterThanOrEqualTo 3
+        }
+    }
+
+    val listOfMaxSize by aRandomListOf<SimpleClass>(maxSize=4)
+
+    @Test
+    fun `it generates list of max size`() {
+        (1..1000).map {
+            Seed.seed = Random().nextLong()
+            expect that listOfMaxSize.size isLessThanOrEqualTo  4
+        }
+    }
+
+    val listOfMinMaxSize by aRandomListOf<SimpleClass>(minSize = 2, maxSize = 3)
+    @Test
+    fun `it generates list of min max size`() {
+        (1..1000).map {
+            Seed.seed = Random().nextLong()
+            expect that listOfMinMaxSize.size isBetween 2..3
+        }
+    }
+
     @Test
     fun `covers all the primitives`() {
         expect that aClassWithPrimitives isEqualTo aClassWithPrimitives
