@@ -140,7 +140,7 @@ class Creator(val type: KType, token: Token): PropertyBased(token, mutableMapOf(
 
     infix fun <T> T.or(other: T) = if (this == any) other else this
 
-    fun getParameters(type: KType, vararg classes: KClass<*>): List<KType> {
+fun getParameters(type: KType, vararg classes: KClass<*>): List<KType> {
         val klass = type.jvmErasure
         val generics = type.arguments.map { it.type }
         val constructors = getConstructor(klass)

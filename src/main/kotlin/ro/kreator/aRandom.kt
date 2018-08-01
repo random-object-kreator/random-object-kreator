@@ -19,17 +19,18 @@ class aRandomListOf<out T : Any>(
         private val size: Int? = null,
         private val minSize: Int = 1,
         private val maxSize: Int = 5,
-        private val customization: List<T>.() -> List<T> = {this}) {
+        private val customization: List<T>.() -> List<T> = { this }) {
 
     init {
         CreationLogic
     }
 
     operator fun getValue(host: Any, property: KProperty<*>): List<T> {
+        registerCustomizations(host)
         val typeOfListItems = property.returnType.arguments.first().type!!
         val hostClassName = host::class.java.canonicalName
         val propertyName = property.name
-        val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash , emptySet(), size?.dec(), minSize = minSize, maxSize = maxSize)
+        val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash, emptySet(), size?.dec(), minSize = minSize, maxSize = maxSize)
         return (list as List<T>).let { it.customization() }
     }
 }
@@ -52,6 +53,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
     private var lastSeed = Seed.seed
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
+        registerCustomizations(hostClass)
         return if (t != null && lastSeed == Seed.seed) t!!
         else instantiateRandomClass(property.returnType, hostClass::class.java.canonicalName.hash with property.name.hash).let {
             lastSeed = Seed.seed
@@ -60,7 +62,16 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
             return t as T
         }
     }
+}
 
+private fun registerCustomizations(hostClass: Any) {
+    hostClass::class.java.methods.toList().filter {
+        it.returnType == Generator0::class.java
+                || it.returnType == Generator1::class.java
+    }.forEach {
+        it.isAccessible = true
+        it.invoke(hostClass)
+    }
 }
 
 /**
