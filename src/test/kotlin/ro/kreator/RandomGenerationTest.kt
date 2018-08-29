@@ -8,6 +8,7 @@ import org.junit.Test
 import java.io.File
 import java.math.BigDecimal
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 class RandomGenerationTest {
     val aSimpleClass by aRandom<SimpleClass>()
@@ -109,7 +110,7 @@ class RandomGenerationTest {
         expect that aJavaClassWithList isEqualTo aJavaClassWithList
     }
 
-    val listOfMinSize by aRandomListOf<SimpleClass>(minSize=3)
+    val listOfMinSize by aRandomListOf<SimpleClass>(minSize = 3)
 
     @Test
     fun `it generates list of min size`() {
@@ -119,13 +120,13 @@ class RandomGenerationTest {
         }
     }
 
-    val listOfMaxSize by aRandomListOf<SimpleClass>(maxSize=4)
+    val listOfMaxSize by aRandomListOf<SimpleClass>(maxSize = 4)
 
     @Test
     fun `it generates list of max size`() {
         (1..1000).map {
             Seed.seed = Random().nextLong()
-            expect that listOfMaxSize.size isLessThanOrEqualTo  4
+            expect that listOfMaxSize.size isLessThanOrEqualTo 4
         }
     }
 
@@ -287,11 +288,26 @@ class RandomGenerationTest {
 
     @Test
     fun `throws meaningful exception when instantiation fails`() {
-        expect thatThrownBy {problematicClass} hasMessageContaining
+        expect thatThrownBy { problematicClass } hasMessageContaining
                 "Something went wrong" hasMessageContaining
                 "with values" hasMessageContaining
                 "y=" hasMessageContaining
                 "x=" hasCauseExactlyInstanceOf
                 Exception::class.java isInstance of<CreationException>()
+    }
+
+    val listCacheCounter = AtomicInteger()
+
+    val aListOfStrings by aRandomListOf<String>(30) {
+        listCacheCounter.incrementAndGet().print()
+        this
+    }
+
+    @Test
+    fun `list creations are cached`() {
+        (1..30).forEach {
+            expect that aListOfStrings hasSize 30
+            expect that listCacheCounter.get() isEqualTo 1
+        }
     }
 }

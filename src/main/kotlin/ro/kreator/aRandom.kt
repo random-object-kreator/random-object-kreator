@@ -25,13 +25,24 @@ class aRandomListOf<out T : Any>(
         CreationLogic
     }
 
+    private var t: List<T>? = null
+    private var lastSeed = Seed.seed
+
     operator fun getValue(host: Any, property: KProperty<*>): List<T> {
         registerCustomizations(host)
-        val typeOfListItems = property.returnType.arguments.first().type!!
-        val hostClassName = host::class.java.canonicalName
-        val propertyName = property.name
-        val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash, emptySet(), size?.dec(), minSize = minSize, maxSize = maxSize)
-        return (list as List<T>).let { it.customization() }
+        return if (t != null && lastSeed == Seed.seed) t!!
+        else {
+            val typeOfListItems = property.returnType.arguments.first().type!!
+            val hostClassName = host::class.java.canonicalName
+            val propertyName = property.name
+            val list = aList(typeOfListItems, hostClassName.hash with propertyName.hash, emptySet(), size?.dec(), minSize = minSize, maxSize = maxSize)
+            (list as List<T>).let {
+                lastSeed = Seed.seed
+                val res = it
+                t = customization(res)
+                t as List<T>
+            }
+        }
     }
 }
 
