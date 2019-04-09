@@ -9,11 +9,13 @@ import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 import org.reflections.util.FilterBuilder
 import java.io.File
-import java.lang.reflect.Array.newInstance
+import java.lang.reflect.Array.*
 import java.lang.reflect.Method
 import java.lang.reflect.TypeVariable
 import java.security.MessageDigest
 import java.util.*
+import java.util.Collections.*
+import kotlin.collections.set
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -22,8 +24,12 @@ import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.*
 import kotlin.reflect.jvm.internal.ReflectProperties
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
+import kotlin.reflect.jvm.jvmName
 
 
 

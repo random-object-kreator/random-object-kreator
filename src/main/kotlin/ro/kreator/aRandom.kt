@@ -4,6 +4,7 @@ import ro.kreator.CreationLogic.aList
 import ro.kreator.CreationLogic.hash
 import ro.kreator.CreationLogic.instantiateRandomClass
 import ro.kreator.CreationLogic.with
+import java.util.Collections.*
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 
@@ -113,4 +114,4 @@ class aRandomFromType<out T : Any>(private val type: KType, private val customiz
     }
 }
 
-fun instantiateRandomClass(type: KType): Any? = CreationLogic.instantiateRandomClass(type)
+fun instantiateRandomClass(type: KType, token: Long = 0): Any? = CreationLogic.instantiateRandomClass(type, token)
