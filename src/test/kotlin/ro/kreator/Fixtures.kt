@@ -1,12 +1,11 @@
 package ro.kreator
 
-import com.emoticast.sparktswagger.Sealed
 import java.math.BigDecimal
 
 interface SealedInterface {
     val type get() = this::class.simpleName
 }
-sealed class SealedClass: Sealed() {
+sealed class SealedClass {
     data class One(val x: String) : SealedClass()
     data class Two(val x: String) : SealedClass()
 }

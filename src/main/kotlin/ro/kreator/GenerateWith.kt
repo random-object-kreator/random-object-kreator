@@ -9,9 +9,9 @@ class Generator1<T, A, B>(private val custom: (A, B) -> T) {
         val type = property.returnType.arguments.first().type!!
         val type1 = property.returnType.arguments[1].type!!
         val type2 = property.returnType.arguments[2].type!!
-        CreationLogic.ObjectFactory[type] = { _, _, token -> custom(
-                CreationLogic.instantiateRandomClass(type1, token =token) as A,
-                CreationLogic.instantiateRandomClass(type2, token = token) as B) as Any }
+        CreationLogic.ObjectFactory[type] = { _, _, property, token -> custom(
+                CreationLogic.instantiateRandomClass(type1, token =token, kProperty = property) as A,
+                CreationLogic.instantiateRandomClass(type2, token = token, kProperty = property) as B) as Any }
         return this
     }
 }
@@ -23,7 +23,7 @@ class Generator0<T, A>(private val custom: (A) -> T) {
     operator fun getValue(a: Any, property: KProperty<*>): Generator0<T, A> {
         val type = property.returnType.arguments.first().type!!
         val type1 = property.returnType.arguments[1].type!!
-        CreationLogic.ObjectFactory[type] = { _, _, token -> custom(CreationLogic.instantiateRandomClass(type1, token =token) as A) as Any }
+        CreationLogic.ObjectFactory[type] = { _, _, property, token -> custom(CreationLogic.instantiateRandomClass(type1, token =token, kProperty = property) as A) as Any }
         return this
     }
 }

@@ -18,6 +18,7 @@ import java.util.Collections.*
 import kotlin.collections.set
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.allSuperclasses
@@ -38,57 +39,57 @@ typealias Token = Long
 internal object CreationLogic : Reify() {
     init {
         Seed.seed
-        fun list(type: KType, token: Token, past: Set<KClass<*>>) = aList(type.arguments.first().type!!, token, past.plus(type.jvmErasure))
-        fun <T : Any> list(klass: KClass<T>, token: Token, past: Set<KClass<*>>): List<T> = aList(klass.createType(), token, past) as List<T>
-        fun map(type: KType, token: Token, past: Set<KClass<*>>) = list(type, token, past)
-                .map { Pair(it, instantiateRandomClass(type.arguments[1].type!!, token)) }.toMap()
+        fun list(type: KType, kProperty: KProperty<*>?, token: Token, past: Set<KClass<*>>) = aList(type.arguments.first().type!!, token, past.plus(type.jvmErasure), kProperty)
+        fun <T : Any> list(klass: KClass<T>, kProperty: KProperty<*>?, token: Token, past: Set<KClass<*>>): List<T> = aList(klass.createType(), token, past, kProperty) as List<T>
+        fun map(type: KType, kProperty: KProperty<*>?, token: Token, past: Set<KClass<*>>) = list(type, kProperty, token, past)
+                .map { Pair(it, instantiateRandomClass(type.arguments[1].type!!, kProperty, token)) }.toMap()
 
         val o = ObjectFactory
 
-        o[kotlin.String::class().type] = { _, _, token -> aString(token) }
-        o[kotlin.String::class().type] = { _, _, token -> aString(token) }
-        o[kotlin.Byte::class().type] = { _, _, token -> aByte(token) }
-        o[kotlin.Int::class().type] = { _, _, token -> anInt(token) }
-        o[kotlin.Long::class().type] = { _, _, token -> aLong(token) }
-        o[kotlin.Double::class().type] = { _, _, token -> aDouble(token) }
-        o[kotlin.Short::class().type] = { _, _, token -> aShort(token) }
-        o[kotlin.Float::class().type] = { _, _, token -> aFloat(token) }
-        o[kotlin.Boolean::class().type] = { _, _, token -> aBoolean(token) }
-        o[kotlin.Char::class().type] = { _, _, token -> aChar(token) }
-        o[IntArray::class(Int::class()).type] = { _, past, token -> list(Int::class, token, past).toIntArray() }
-        o[Array<Int>::class(Int::class()).type] = { _, past, token -> list(Int::class, token, past).toTypedArray() }
-        o[ShortArray::class(Short::class()).type] = { _, past, token -> list(Short::class, token, past).toShortArray() }
-        o[Array<Short>::class(Short::class()).type] = { _, past, token -> list(Short::class, token, past).toTypedArray() }
-        o[LongArray::class(Long::class()).type] = { _, past, token -> list(Long::class, token, past).toLongArray() }
-        o[Array<Long>::class(Long::class()).type] = { _, past, token -> list(Long::class, token, past).toTypedArray() }
-        o[FloatArray::class(Float::class()).type] = { _, past, token -> list(Float::class, token, past).toFloatArray() }
-        o[Array<Float>::class(Float::class()).type] = { _, past, token -> list(Float::class, token, past).toTypedArray() }
-        o[DoubleArray::class(Double::class()).type] = { _, past, token -> list(Double::class, token, past).toDoubleArray() }
-        o[Array<Double>::class(Double::class()).type] = { _, past, token -> list(Double::class, token, past).toTypedArray() }
-        o[BooleanArray::class(Boolean::class()).type] = { _, past, token -> list(Boolean::class, token, past).toBooleanArray() }
-        o[Array<Boolean>::class(Boolean::class()).type] = { _, past, token -> list(Boolean::class, token, past).toTypedArray() }
-        o[ByteArray::class(Byte::class()).type] = { _, past, token -> list(Byte::class, token, past).toByteArray() }
-        o[Array<Byte>::class(Byte::class()).type] = { _, past, token -> list(Byte::class, token, past).toTypedArray() }
-        o[CharArray::class(Char::class()).type] = { _, past, token -> list(Char::class, token, past).toCharArray() }
-        o[Array<Char>::class(Char::class()).type] = { _, past, token -> list(Char::class, token, past).toTypedArray() }
+        o[kotlin.String::class().type] = { _, _, kproperty, token -> aString(token) }
+        o[kotlin.String::class().type] = { _, _, kproperty, token -> aString(token) }
+        o[kotlin.Byte::class().type] = { _, _, kproperty, token -> aByte(token) }
+        o[kotlin.Int::class().type] = { _, _, kproperty, token -> anInt(token) }
+        o[kotlin.Long::class().type] = { _, _, kproperty, token -> aLong(token) }
+        o[kotlin.Double::class().type] = { _, _, kproperty, token -> aDouble(token) }
+        o[kotlin.Short::class().type] = { _, _, kproperty, token -> aShort(token) }
+        o[kotlin.Float::class().type] = { _, _, kproperty, token -> aFloat(token) }
+        o[kotlin.Boolean::class().type] = { _, _, kproperty, token -> aBoolean(token) }
+        o[kotlin.Char::class().type] = { _, _, kproperty, token -> aChar(token) }
+        o[IntArray::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toIntArray() }
+        o[Array<Int>::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toTypedArray() }
+        o[ShortArray::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toShortArray() }
+        o[Array<Short>::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toTypedArray() }
+        o[LongArray::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toLongArray() }
+        o[Array<Long>::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toTypedArray() }
+        o[FloatArray::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toFloatArray() }
+        o[Array<Float>::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toTypedArray() }
+        o[DoubleArray::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toDoubleArray() }
+        o[Array<Double>::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toTypedArray() }
+        o[BooleanArray::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toBooleanArray() }
+        o[Array<Boolean>::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toTypedArray() }
+        o[ByteArray::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toByteArray() }
+        o[Array<Byte>::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toTypedArray() }
+        o[CharArray::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toCharArray() }
+        o[Array<Char>::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toTypedArray() }
 
-        o[List::class.starProjectedType] = { type, past, token -> list(type, token, past) }
-        o[Set::class.starProjectedType] = { type, past, token -> list(type, token, past).toSet() }
-        o[kotlin.collections.Map::class.starProjectedType] = { type, past, token -> map(type, token, past) }
+        o[List::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past) }
+        o[Set::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past).toSet() }
+        o[kotlin.collections.Map::class.starProjectedType] = { type, past, kproperty, token -> map(type, kproperty, token, past) }
 
-        o[File::class.starProjectedType] = { _, _, token -> File(aString(token)) }
-        o[Date::class.starProjectedType] = {_, _, token -> Date(aLong(token)) }
+        o[File::class.starProjectedType] = { _, _, kproperty, token -> File(aString(token)) }
+        o[Date::class.starProjectedType] = {_, _, kproperty, token -> Date(aLong(token)) }
     }
 
     internal object ObjectFactory {
-        private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, Token) -> Any>()
+        private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any>()
 
-        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, Token) -> Any): ObjectFactory {
+        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any): ObjectFactory {
             objectFactories[type] = factory
             return this
         }
 
-        operator fun get(type: KType): ((KType, Set<KClass<*>>, Token) -> Any)? {
+        operator fun get(type: KType): ((KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any)? {
             return objectFactories[type] ?: objectFactories[type.jvmErasure.starProjectedType]
         }
 
@@ -98,7 +99,7 @@ internal object CreationLogic : Reify() {
     }
 
     private val maxChar = 59319
-    private val maxStringLength = 20
+    private val maxStringLength = 5
 
     private fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
     private fun anInt(token: Long, max: Int? = null): Int = max?.let { pseudoRandom(token).nextInt(it) } ?: pseudoRandom(token).nextInt()
@@ -128,7 +129,9 @@ internal object CreationLogic : Reify() {
         return this * 31 + other
     }
 
-    internal fun aList(type: KType, token: Long, parentClasses: Set<KClass<*>>,
+    internal fun aList(type: KType,
+                       token: Long, parentClasses: Set<KClass<*>>,
+                       kProperty: KProperty<*>?,
                        size: Int? = null,
                        minSize: Int = 1,
                        maxSize: Int = 5): List<*> {
@@ -140,12 +143,12 @@ internal object CreationLogic : Reify() {
 
         return items.map {
             if (klass == List::class) {
-                aList(type.arguments.first().type!!, token.hash with it.hash, parentClasses)
-            } else instantiateRandomClass(type, token.hash with it.hash, parentClasses)
+                aList(type.arguments.first().type!!, token.hash with it.hash, parentClasses, kProperty)
+            } else instantiateRandomClass(type, token.hash with it.hash, parentClasses, kProperty)
         }
     }
 
-    internal fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet()): Any? {
+    internal fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet(), kProperty: KProperty<*>?): Any? {
         val klass = type.jvmErasure
         parentClasses.shouldNotContain(klass)
 
@@ -158,23 +161,23 @@ internal object CreationLogic : Reify() {
 
         return when {
             isNullable() -> null
-            thereIsACustomFactory() -> ObjectFactory[type]?.invoke(type, parentClasses, token)
+            thereIsACustomFactory() -> ObjectFactory[type]?.invoke(type, parentClasses, kProperty, token)
             klass.isAnObject() -> klass.objectInstance
             klass.isAnEnum() -> klass.java.enumConstants[anInt(token, max = klass.java.enumConstants.size)]
-            klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass)
-            klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, parentClasses)
-            else -> instantiateArbitraryClass(klass, token, type, parentClasses)
+            klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass, kProperty)
+            klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, parentClasses, kProperty)
+            else -> instantiateArbitraryClass(klass, token, type, parentClasses, kProperty)
         }
     }
 
-    private fun instantiateArray(type: KType, token: Token, past: Set<KClass<*>>, klass: KClass<out Any>): Array<Any?> {
+    private fun instantiateArray(type: KType, token: Token, past: Set<KClass<*>>, klass: KClass<out Any>, kProperty: KProperty<*>?): Array<Any?> {
         val genericType = type.arguments.first().type!!
-        val list = aList(genericType, token, past.plus(klass))
+        val list = aList(genericType, token, past.plus(klass), kProperty)
         val array = newInstance(genericType.jvmErasure!!.java, list.size) as Array<Any?>
         return array.apply { list.forEachIndexed { index, any -> array[index] = any } }
     }
 
-    private fun instantiateAbstract(type: KType, token: Token, past: Set<KClass<*>>): Any {
+    private fun instantiateAbstract(type: KType, token: Token, past: Set<KClass<*>>, kProperty: KProperty<*>?): Any {
         val allClassesInModule = if (classes.isEmpty()) {
             getAndCacheClasses(type)
         } else classes
@@ -192,9 +195,9 @@ internal object CreationLogic : Reify() {
         return allImplementationsInModule.getOrNull(pseudoRandom(token).int(allImplementationsInModule.size))
                 ?.let {
                     val params = it.kotlin.typeParameters.map { KTypeProjection(it.variance, it.starProjectedType) }
-                    instantiateRandomClass(it.kotlin.createType(params), token.hash with it.name.hash)
+                    instantiateRandomClass(it.kotlin.createType(params), kProperty, token.hash with it.name.hash)
                 }
-                ?: instantiateNewInterface(type, token, past)
+                ?: instantiateNewInterface(type, token, past, kProperty)
     }
 
     private fun getAndCacheClasses(type: KType): Set<Class<out Any>> {
@@ -206,7 +209,7 @@ internal object CreationLogic : Reify() {
         return reflections.getSubTypesOf(Any::class.java).apply { classes.addAll(this) }
     }
 
-    private fun instantiateNewInterface(type: KType, token: Token, past: Set<KClass<*>>): Any {
+    private fun instantiateNewInterface(type: KType, token: Token, past: Set<KClass<*>>, kProperty: KProperty<*>?): Any {
 
         val klass = type.jvmErasure
         val genericTypeNameToConcreteTypeMap = klass.typeParameters.map { it.name }.zip(type.arguments).toMap()
@@ -249,8 +252,8 @@ internal object CreationLogic : Reify() {
                 Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past) } ?:
-                        instantiateRandomClass(method.returnType.kotlin.createType(), token, past)
+                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past, kProperty) } ?:
+                        instantiateRandomClass(method.returnType.kotlin.createType(), token, past, kProperty)
             }
         })
         return proxy
@@ -260,7 +263,7 @@ internal object CreationLogic : Reify() {
         if (isAllowedCyclic(klass) && this.contains(klass)) throw CyclicException()
     }
 
-    private fun instantiateArbitraryClass(klass: KClass<out Any>, token: Token, type: KType, past: Set<KClass<*>>): Any? {
+    private fun instantiateArbitraryClass(klass: KClass<out Any>, token: Token, type: KType, past: Set<KClass<*>>, kProperty: KProperty<*>?): Any? {
         val constructors = klass.constructors.filter { !it.parameters.any { (it.type.jvmErasure == klass) } }.toList()
         if (constructors.isEmpty() && klass.constructors.any { it.parameters.any { (it.type.jvmErasure == klass) } }) throw CyclicException()
         val defaultConstructor = constructors[pseudoRandom(token).int(constructors.size)] as KFunction<*>
@@ -271,7 +274,7 @@ internal object CreationLogic : Reify() {
         val parameters = (pairedConstructor.map {
             fun isTypeVariable() = it.second.type.javaType is TypeVariable<*>
             val tpe = if (isTypeVariable()) typeMap[it.first]?.type ?: it.second.type else it.second.type
-            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass))
+            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass), kProperty)
         }).toTypedArray()
         try {
             val res = defaultConstructor.call(*parameters)

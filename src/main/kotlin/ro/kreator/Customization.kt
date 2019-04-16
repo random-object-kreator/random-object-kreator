@@ -1,6 +1,7 @@
 package ro.kreator
 
 import ro.kreator.CreationLogic.ObjectFactory
+import ro.kreator.customize.*
 import kotlin.reflect.KProperty
 
 interface Customizer {
@@ -9,7 +10,11 @@ interface Customizer {
             .forEach { it.invoke(this) }
 }
 
+fun <T> customize(constructorBlock: Creator.() -> T) = DelegateNoArg(constructorBlock)
+
 class customize<T> {
+
+
     fun using(fn: () -> T, g: Creator.(() -> T) -> T) = Delegate0(fn, g)
     fun <A> using(fn: (A) -> T, g: Creator.((A) -> T) -> T) = Delegate1(fn, g)
     fun <A, B> using(fn: (A, B) -> T, g: Creator.((A, B) -> T) -> T) = Delegate2(fn, g)
@@ -31,10 +36,20 @@ class customize<T> {
     fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> using(fn: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T, g: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T) -> T) = Delegate18(fn, g)
     fun <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S> using(fn: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T, g: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T) -> T) = Delegate19(fn, g)
 
+    class DelegateNoArg<T>(val constructorBlock: Creator.() -> T) {
+
+        operator fun getValue(a: Any, property: KProperty<*>): DelegateNoArg<T> {
+            val type = property.returnType.arguments.last().type!!
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock() as Any }
+            return this
+        }
+    }
+
     class Delegate0<T>(val constructor: () -> T, val constructorBlock: Creator.(() -> T) -> T) {
+
         operator fun getValue(a: Any, property: KProperty<*>): Delegate0<T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(type, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -42,7 +57,7 @@ class customize<T> {
     class Delegate1<A, T>(val constructor: (A) -> T, val constructorBlock: Creator.((A) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate1<A, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(type, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -50,7 +65,7 @@ class customize<T> {
     class Delegate2<A, B, T>(val constructor: (A, B) -> T, val constructorBlock: Creator.((A, B) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate2<A, B, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(type, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -58,7 +73,7 @@ class customize<T> {
     class Delegate3<A, B, C, T>(val constructor: (A, B, C) -> T, val constructorBlock: Creator.((A, B, C) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate3<A, B, C, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(type, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -66,7 +81,7 @@ class customize<T> {
     class Delegate4<A, B, C, D, T>(val constructor: (A, B, C, D) -> T, val constructorBlock: Creator.((A, B, C, D) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate4<A, B, C, D, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(type, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -74,7 +89,7 @@ class customize<T> {
     class Delegate5<A, B, C, D, E, T>(val constructor: (A, B, C, D, E) -> T, val constructorBlock: Creator.((A, B, C, D, E) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate5<A, B, C, D, E, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -82,7 +97,7 @@ class customize<T> {
     class Delegate6<A, B, C, D, E, F, T>(val constructor: (A, B, C, D, E, F) -> T, val constructorBlock: Creator.((A, B, C, D, E, F) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate6<A, B, C, D, E, F, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -90,7 +105,7 @@ class customize<T> {
     class Delegate7<A, B, C, D, E, F, G, T>(val constructor: (A, B, C, D, E, F, G) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate7<A, B, C, D, E, F, G, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -98,7 +113,7 @@ class customize<T> {
     class Delegate8<A, B, C, D, E, F, G, H, T>(val constructor: (A, B, C, D, E, F, G, H) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate8<A, B, C, D, E, F, G, H, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -106,7 +121,7 @@ class customize<T> {
     class Delegate9<A, B, C, D, E, F, G, H, I, T>(val constructor: (A, B, C, D, E, F, G, H, I) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate9<A, B, C, D, E, F, G, H, I, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -114,7 +129,7 @@ class customize<T> {
     class Delegate10<A, B, C, D, E, F, G, H, I, J, T>(val constructor: (A, B, C, D, E, F, G, H, I, J) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate10<A, B, C, D, E, F, G, H, I, J, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -122,7 +137,7 @@ class customize<T> {
     class Delegate11<A, B, C, D, E, F, G, H, I, J, K, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate11<A, B, C, D, E, F, G, H, I, J, K, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -130,7 +145,7 @@ class customize<T> {
     class Delegate12<A, B, C, D, E, F, G, H, I, J, K, L, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate12<A, B, C, D, E, F, G, H, I, J, K, L, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -138,7 +153,7 @@ class customize<T> {
     class Delegate13<A, B, C, D, E, F, G, H, I, J, K, L, M, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate13<A, B, C, D, E, F, G, H, I, J, K, L, M, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -146,7 +161,7 @@ class customize<T> {
     class Delegate14<A, B, C, D, E, F, G, H, I, J, K, L, M, N, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate14<A, B, C, D, E, F, G, H, I, J, K, L, M, N, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -154,7 +169,7 @@ class customize<T> {
     class Delegate15<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate15<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -162,7 +177,7 @@ class customize<T> {
     class Delegate16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -170,7 +185,7 @@ class customize<T> {
     class Delegate17<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate17<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -178,7 +193,7 @@ class customize<T> {
     class Delegate18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -186,7 +201,7 @@ class customize<T> {
     class Delegate19<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T) -> T) {
         operator fun getValue(a: Any, property: KProperty<*>): Delegate19<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T> {
             val type = property.returnType.arguments.last().type!!
-            ObjectFactory[type] = { _, _, token -> Creator(property.returnType.arguments.last().type!!, token).constructorBlock(constructor) as Any }
+            ObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }

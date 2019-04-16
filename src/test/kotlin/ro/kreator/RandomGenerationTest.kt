@@ -2,7 +2,11 @@
 
 package ro.kreator
 
-import com.memoizr.assertk.*
+import com.memoizr.assertk.expect
+import com.memoizr.assertk.isEqualTo
+import com.memoizr.assertk.isInstance
+import com.memoizr.assertk.notNull
+import com.memoizr.assertk.of
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -299,7 +303,7 @@ class RandomGenerationTest {
     val listCacheCounter = AtomicInteger()
 
     val aListOfStrings by aRandomListOf<String>(30) {
-        listCacheCounter.incrementAndGet().print()
+        listCacheCounter.incrementAndGet()
         this
     }
 
@@ -309,5 +313,23 @@ class RandomGenerationTest {
             expect that aListOfStrings hasSize 30
             expect that listCacheCounter.get() isEqualTo 1
         }
+    }
+
+    data class Username(val value: String)
+    data class Id(val value: String)
+    data class User(val username: Username, val id: Id)
+
+    val user by aRandom<User>()
+    val customUsername by customize { Username("${property?.name}_username_${a<String>()}")}
+    val customId by customize { Id("${property?.name}_id_${a<String>()}")}
+
+    val users by aRandomListOf<User>()
+
+    @Test
+    fun `includes more descriptive strings`() {
+        customUsername
+        customId
+        expect that users.map { it.id.value }.toSet().size isEqualTo users.size
+        expect that user.username.value contains  "user_username"
     }
 }

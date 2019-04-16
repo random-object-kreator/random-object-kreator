@@ -1,6 +1,6 @@
 package ro.kreator
 
-internal fun <T : Any> T.print(): T = this.apply {
+internal fun <T : Any?> T.print(): T = this.apply {
     val stackFrame = Thread.currentThread().stackTrace[2]
     val className = stackFrame.className
     val methodName = stackFrame.methodName
