@@ -34,7 +34,6 @@ import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.jvmName
 
 
-
 typealias Token = Long
 
 internal object CreationLogic : Reify() {
@@ -79,19 +78,22 @@ internal object CreationLogic : Reify() {
         o[kotlin.collections.Map::class.starProjectedType] = { type, past, kproperty, token -> map(type, kproperty, token, past) }
 
         o[File::class.starProjectedType] = { _, _, kproperty, token -> File(aString(token)) }
-        o[Date::class.starProjectedType] = {_, _, kproperty, token -> Date(aLong(token)) }
+        o[Date::class.starProjectedType] = { _, _, kproperty, token -> Date(aLong(token)) }
     }
 
     internal object ObjectFactory {
-        private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any>()
+        private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?>()
 
-        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any): ObjectFactory {
+        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?): ObjectFactory {
             objectFactories[type] = factory
             return this
         }
 
-        operator fun get(type: KType): ((KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any)? {
-            return objectFactories[type] ?: if (type.arguments.isNotEmpty()) objectFactories[type.jvmErasure.starProjectedType] else null
+        fun putIfAbsent(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?) = objectFactories.putIfAbsent(type, factory)
+
+        operator fun get(type: KType): ((KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?)? {
+            return objectFactories[type]
+                    ?: if (type.arguments.isNotEmpty()) objectFactories[type.jvmErasure.starProjectedType] else null
         }
 
         operator fun contains(type: KType): Boolean {
@@ -103,7 +105,9 @@ internal object CreationLogic : Reify() {
     private val maxStringLength = 5
 
     private fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
-    private fun anInt(token: Long, max: Int? = null): Int = max?.let { pseudoRandom(token).nextInt(it) } ?: pseudoRandom(token).nextInt()
+    private fun anInt(token: Long, max: Int? = null): Int = max?.let { pseudoRandom(token).nextInt(it) }
+            ?: pseudoRandom(token).nextInt()
+
     private fun aLong(token: Long): Long = pseudoRandom(token).nextLong()
     private fun aDouble(token: Long): Double = pseudoRandom(token).nextDouble()
     private fun aShort(token: Long): Short = pseudoRandom(token).nextInt(Short.MAX_VALUE.toInt()).toShort()
@@ -116,15 +120,16 @@ internal object CreationLogic : Reify() {
 
     private val md = MessageDigest.getInstance("MD5")
 
-    internal val Any.hash: Long get() {
-        val array = md.digest(toString().toByteArray())
+    internal val Any.hash: Long
+        get() {
+            val array = md.digest(toString().toByteArray())
 
-        var hash = 7L
-        for (i in array) {
-            hash = hash * 31 + i.toLong()
+            var hash = 7L
+            for (i in array) {
+                hash = hash * 31 + i.toLong()
+            }
+            return hash
         }
-        return hash
-    }
 
     internal infix fun Long.with(other: Long): Long {
         return this * 31 + other
@@ -140,7 +145,7 @@ internal object CreationLogic : Reify() {
 
         parentClasses.shouldNotContain(klass)
 
-        val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize-minSize) + minSize))
+        val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize - minSize) + minSize))
 
         return items.map {
             if (klass == List::class) {
@@ -163,10 +168,10 @@ internal object CreationLogic : Reify() {
         return when {
             isNullable() -> null
             thereIsACustomFactory() -> ObjectFactory[type]?.invoke(type, parentClasses, kProperty, token)
-            klass.isAnObject() -> klass.objectInstance
             klass.isAnEnum() -> klass.java.enumConstants[anInt(token, max = klass.java.enumConstants.size)]
             klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass, kProperty)
             klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, parentClasses, kProperty)
+            klass.isAnObject() -> klass.objectInstance
             else -> instantiateArbitraryClass(klass, token, type, parentClasses, kProperty)
         }
     }
@@ -187,8 +192,9 @@ internal object CreationLogic : Reify() {
 
         val allImplementationsInModule = classesMap[klass] ?: allClassesInModule
                 .filter { klass.java != it && klass.java.isAssignableFrom(it) }
-                .let { if (it.isEmpty()) getAndCacheClasses(type)
-                        .filter { klass.java != it && klass.java.isAssignableFrom(it) }
+                .let {
+                    if (it.isEmpty()) getAndCacheClasses(type)
+                            .filter { klass.java != it && klass.java.isAssignableFrom(it) }
                     else it
                 }
                 .apply { classesMap.put(klass, this) }
@@ -216,12 +222,13 @@ internal object CreationLogic : Reify() {
         val genericTypeNameToConcreteTypeMap = klass.typeParameters.map { it.name }.zip(type.arguments).toMap()
 
         fun degenerify(kType: KType): KType {
-            return if (kType.arguments.isEmpty()) genericTypeNameToConcreteTypeMap[kType.javaType.typeName]?.type ?: kType
+            return if (kType.arguments.isEmpty()) genericTypeNameToConcreteTypeMap[kType.javaType.typeName]?.type
+                    ?: kType
             else {
                 val argumentField = kType::class.java.declaredFields.find { it.name == "${kType::arguments.name}\$delegate" }!!
                 argumentField.isAccessible = true
-                val degenerifiedArguments = kType.arguments.map { KTypeProjection(it.variance, degenerify(it.type!!))}
-                val newFieldValue = ReflectProperties.lazySoft { degenerifiedArguments  }
+                val degenerifiedArguments = kType.arguments.map { KTypeProjection(it.variance, degenerify(it.type!!)) }
+                val newFieldValue = ReflectProperties.lazySoft { degenerifiedArguments }
                 argumentField.set(kType, newFieldValue)
                 kType
             }
@@ -253,8 +260,8 @@ internal object CreationLogic : Reify() {
                 Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past, kProperty) } ?:
-                        instantiateRandomClass(method.returnType.kotlin.createType(), token, past, kProperty)
+                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token, past, kProperty) }
+                        ?: instantiateRandomClass(method.returnType.kotlin.createType(), token, past, kProperty)
             }
         })
         return proxy
@@ -272,15 +279,27 @@ internal object CreationLogic : Reify() {
             defaultConstructor.isAccessible = true
         }
         val constructorTypeParameters by lazy { defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList() }
-        val typeMap by lazy {type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap() }
+        val typeMap by lazy { type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap() }
         val pairedConstructor = defaultConstructor.parameters.map { if (it.type.javaType is TypeVariable<*>) constructorTypeParameters.get(it.index) to it else "" to it }
-        val parameters = (pairedConstructor.map { (first, second: KParameter) ->
-            fun isTypeVariable() = second.type.javaType is TypeVariable<*>
-            val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
-            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.simpleName!!.hash with second.name!!.hash, past.plus(klass), kProperty)
-        }).toTypedArray()
+        val parameters by lazy {
+            (pairedConstructor.map { (first, second: KParameter) ->
+                fun isTypeVariable() = second.type.javaType is TypeVariable<*>
+                val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
+                instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.jvmName.hash with second.name!!.hash, past.plus(klass), kProperty)
+            }).toTypedArray()
+        }
         try {
             val res = defaultConstructor.call(*parameters)
+
+            ObjectFactory.putIfAbsent(type, { type, past, prop, token ->
+                defaultConstructor.call(*
+                (pairedConstructor.map { (first, second: KParameter) ->
+                    fun isTypeVariable() = second.type.javaType is TypeVariable<*>
+                    val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
+                    instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.jvmName.hash with second.name!!.hash, past.plus(klass), prop)
+                }).toTypedArray()
+                )
+            })
             return res
         } catch (e: Throwable) {
             val namedParameters = parameters.zip(defaultConstructor.parameters.map { it.name }).map { "${it.second}=${it.first}" }

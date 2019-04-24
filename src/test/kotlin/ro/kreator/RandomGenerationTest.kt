@@ -328,6 +328,7 @@ class RandomGenerationTest {
     init {
         registerCustomizations(customUsername, customId)
     }
+
     @Test
     fun `includes more descriptive strings`() {
         expect that users.map { it.id.value }.toSet().size isEqualTo users.size
