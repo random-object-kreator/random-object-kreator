@@ -72,7 +72,7 @@ internal object CreationLogic : Reify() {
         o[ByteArray::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toByteArray() }
         o[Array<Byte>::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toTypedArray() }
         o[CharArray::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toCharArray() }
-        o[Array<Char>::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toTypedArray() }
+        o[Array<Char>::class.invoke(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toTypedArray() }
 
         o[List::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past) }
         o[Set::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past).toSet() }
@@ -91,7 +91,7 @@ internal object CreationLogic : Reify() {
         }
 
         operator fun get(type: KType): ((KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any)? {
-            return objectFactories[type] ?: objectFactories[type.jvmErasure.starProjectedType]
+            return objectFactories[type] ?: if (type.arguments.isNotEmpty()) objectFactories[type.jvmErasure.starProjectedType] else null
         }
 
         operator fun contains(type: KType): Boolean {
