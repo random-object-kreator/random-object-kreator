@@ -16,6 +16,7 @@ import java.security.MessageDigest
 import java.util.*
 import java.util.Collections.*
 import kotlin.collections.set
+import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -46,45 +47,48 @@ internal object CreationLogic : Reify() {
 
         val o = ObjectFactory
 
-        o[kotlin.String::class().type] = { _, _, kproperty, token -> aString(token) }
-        o[kotlin.String::class().type] = { _, _, kproperty, token -> aString(token) }
-        o[kotlin.Byte::class().type] = { _, _, kproperty, token -> aByte(token) }
-        o[kotlin.Int::class().type] = { _, _, kproperty, token -> anInt(token) }
-        o[kotlin.Long::class().type] = { _, _, kproperty, token -> aLong(token) }
-        o[kotlin.Double::class().type] = { _, _, kproperty, token -> aDouble(token) }
-        o[kotlin.Short::class().type] = { _, _, kproperty, token -> aShort(token) }
-        o[kotlin.Float::class().type] = { _, _, kproperty, token -> aFloat(token) }
-        o[kotlin.Boolean::class().type] = { _, _, kproperty, token -> aBoolean(token) }
-        o[kotlin.Char::class().type] = { _, _, kproperty, token -> aChar(token) }
-        o[IntArray::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toIntArray() }
-        o[Array<Int>::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toTypedArray() }
-        o[ShortArray::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toShortArray() }
-        o[Array<Short>::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toTypedArray() }
-        o[LongArray::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toLongArray() }
-        o[Array<Long>::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toTypedArray() }
-        o[FloatArray::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toFloatArray() }
-        o[Array<Float>::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toTypedArray() }
-        o[DoubleArray::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toDoubleArray() }
-        o[Array<Double>::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toTypedArray() }
-        o[BooleanArray::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toBooleanArray() }
-        o[Array<Boolean>::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toTypedArray() }
-        o[ByteArray::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toByteArray() }
-        o[Array<Byte>::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toTypedArray() }
-        o[CharArray::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toCharArray() }
-        o[Array<Char>::class.invoke(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toTypedArray() }
+        o[kotlin.String::class.java] = { _, _, kproperty, token -> aString(token) }
+        o[kotlin.Byte::class.java] = { _, _, kproperty, token -> aByte(token) }
+        o[kotlin.Int::class.java] = { _, _, kproperty, token -> anInt(token) }
+        o[kotlin.Long::class.java] = { _, _, kproperty, token -> aLong(token) }
+        o[kotlin.Double::class.java] = { _, _, kproperty, token -> aDouble(token) }
+        o[kotlin.Short::class.java] = { _, _, kproperty, token -> aShort(token) }
+        o[kotlin.Float::class.java] = { _, _, kproperty, token -> aFloat(token) }
+        o[kotlin.Boolean::class.java] = { _, _, kproperty, token -> aBoolean(token) }
+        o[kotlin.Char::class.java] = { _, _, kproperty, token -> aChar(token) }
+        o[List::class.java] = { type, past, kproperty, token -> list(type, kproperty, token, past) }
+        o[Set::class.java] = { type, past, kproperty, token -> list(type, kproperty, token, past).toSet() }
+        o[File::class.java] = { _, _, kproperty, token -> File(aString(token)) }
+        o[Date::class.java] = { _, _, kproperty, token -> Date(aLong(token)) }
+        o[kotlin.collections.Map::class.java] = { type, past, kproperty, token -> map(type, kproperty, token, past) }
 
-        o[List::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past) }
-        o[Set::class.starProjectedType] = { type, past, kproperty, token -> list(type, kproperty, token, past).toSet() }
-        o[kotlin.collections.Map::class.starProjectedType] = { type, past, kproperty, token -> map(type, kproperty, token, past) }
 
-        o[File::class.starProjectedType] = { _, _, kproperty, token -> File(aString(token)) }
-        o[Date::class.starProjectedType] = { _, _, kproperty, token -> Date(aLong(token)) }
+        val g = GenericObjectFactory
+        g[IntArray::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toIntArray() }
+        g[ShortArray::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toShortArray() }
+        g[LongArray::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toLongArray() }
+        g[FloatArray::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toFloatArray() }
+        g[DoubleArray::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toDoubleArray() }
+        g[BooleanArray::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toBooleanArray() }
+        g[ByteArray::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toByteArray() }
+        g[CharArray::class(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toCharArray() }
+        g[Array<Int>::class(Int::class()).type] = { _, past, kproperty, token -> list(Int::class, kproperty, token, past).toTypedArray() }
+        g[Array<Short>::class(Short::class()).type] = { _, past, kproperty, token -> list(Short::class, kproperty, token, past).toTypedArray() }
+        g[Array<Long>::class(Long::class()).type] = { _, past, kproperty, token -> list(Long::class, kproperty, token, past).toTypedArray() }
+        g[Array<Float>::class(Float::class()).type] = { _, past, kproperty, token -> list(Float::class, kproperty, token, past).toTypedArray() }
+        g[Array<Double>::class(Double::class()).type] = { _, past, kproperty, token -> list(Double::class, kproperty, token, past).toTypedArray() }
+        g[Array<Boolean>::class(Boolean::class()).type] = { _, past, kproperty, token -> list(Boolean::class, kproperty, token, past).toTypedArray() }
+        g[Array<Byte>::class(Byte::class()).type] = { _, past, kproperty, token -> list(Byte::class, kproperty, token, past).toTypedArray() }
+        g[Array<Char>::class.invoke(Char::class()).type] = { _, past, kproperty, token -> list(Char::class, kproperty, token, past).toTypedArray() }
     }
 
-    internal object ObjectFactory {
+    internal object ObjectFactory : MutableMap<Class<*>, (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?> by mutableMapOf() {
+    }
+
+    internal object GenericObjectFactory {
         private val objectFactories = mutableMapOf<KType, (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?>()
 
-        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?): ObjectFactory {
+        operator fun set(type: KType, factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any?): GenericObjectFactory {
             objectFactories[type] = factory
             return this
         }
@@ -105,8 +109,8 @@ internal object CreationLogic : Reify() {
     private val maxStringLength = 5
 
     private fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
-    private fun anInt(token: Long, max: Int? = null): Int = max?.let { pseudoRandom(token).nextInt(it) }
-            ?: pseudoRandom(token).nextInt()
+    private fun anInt(token: Long, max: Int = Int.MAX_VALUE): Int = seededToken(token).toInt() % max
+    private fun anUInt(token: Long, max: Int = Int.MAX_VALUE): UInt = seededToken(token).toUInt() % max.toUInt()
 
     private fun aLong(token: Long): Long = pseudoRandom(token).nextLong()
     private fun aDouble(token: Long): Double = pseudoRandom(token).nextDouble()
@@ -114,8 +118,21 @@ internal object CreationLogic : Reify() {
     private fun aFloat(token: Long): Float = pseudoRandom(token).nextFloat()
     private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
-    private fun aString(token: Long): String = pseudoRandom(token).let {
+    private fun aStrings(token: Long): String = pseudoRandom(token).let {
         RandomStringUtils.random(Math.max(1, it.nextInt(maxStringLength)), 0, maxChar, true, true, null, it)
+    }
+
+    private val primes = intArrayOf(2, 5, 7, 11, 17, 21,31, 97)
+    private fun aString(token: Long): String {
+        val seededToken = seededToken(token)
+        val size = (seededToken.toInt().absoluteValue % 6) + 2
+        val charArray = CharArray(size)
+
+        for (i in 1 until size + 1) {
+            charArray[i -1  ] = (((seededToken * primes[i]) with Seed.seed).absoluteValue % 0x00ff).toChar()
+        }
+
+        return String(charArray)
     }
 
     private val md = MessageDigest.getInstance("MD5")
@@ -156,19 +173,22 @@ internal object CreationLogic : Reify() {
 
     internal fun instantiateRandomClass(type: KType, token: Token = 0, parentClasses: Set<KClass<*>> = emptySet(), kProperty: KProperty<*>?): Any? {
         val klass = type.jvmErasure
+        val java = klass.java
         parentClasses.shouldNotContain(klass)
 
         fun KClass<out Any>.isAnInterfaceOrSealed() = this.java.isInterface || this.isSealed || this.isAbstract
         fun KClass<out Any>.isAnArray() = this.java.isArray
         fun KClass<out Any>.isAnEnum() = this.java.isEnum
         fun KClass<out Any>.isAnObject() = this.objectInstance != null
-        fun thereIsACustomFactory() = type in ObjectFactory
+        fun thereIsACustomFactory() = java in ObjectFactory
+        fun thereIsACustomGenericFactory() = type in GenericObjectFactory
         fun isNullable(): Boolean = type.isMarkedNullable && pseudoRandom(token).nextInt() % 2 == 0
 
         return when {
             isNullable() -> null
-            thereIsACustomFactory() -> ObjectFactory[type]?.invoke(type, parentClasses, kProperty, token)
-            klass.isAnEnum() -> klass.java.enumConstants[anInt(token, max = klass.java.enumConstants.size)]
+            thereIsACustomFactory() -> ObjectFactory[java]?.invoke(type, parentClasses, kProperty, token)
+            thereIsACustomGenericFactory() -> GenericObjectFactory[type]?.invoke(type, parentClasses, kProperty, token)
+            klass.isAnEnum() -> java.enumConstants[anUInt(token, max = java.enumConstants.size).toInt()]
             klass.isAnArray() -> instantiateArray(type, token, parentClasses, klass, kProperty)
             klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, parentClasses, kProperty)
             klass.isAnObject() -> klass.objectInstance
@@ -296,15 +316,19 @@ internal object CreationLogic : Reify() {
             }).toTypedArray()
         }
         try {
-            val res = defaultConstructor.call(*parameters)
-
-            ObjectFactory.putIfAbsent(type, { type, past, prop, token ->
+            val factory: (KType, Set<KClass<*>>, KProperty<*>?, Token) -> Any? = { type, past, prop, token ->
                 defaultConstructor.call(*
                 (recipe.map {
                     instantiateRandomClass(it.type, token.hash with it.parttoken, past.plus(klass), prop)
                 }).toTypedArray()
                 )
-            })
+            }
+
+            if (typeMap.isEmpty()) {
+                ObjectFactory.putIfAbsent(klass.java, factory)
+            } else {
+                GenericObjectFactory.putIfAbsent(type, factory)
+            }
             return instantiateRandomClass(type, token, past, kProperty)
         } catch (e: Throwable) {
             val namedParameters = parameters.zip(defaultConstructor.parameters.map { it.name }).map { "${it.second}=${it.first}" }
@@ -315,9 +339,15 @@ internal object CreationLogic : Reify() {
     }
 
     private fun Random.int(bound: Int) = if (bound == 0) 0 else nextInt(bound)
-    private fun isAllowedCyclic(klass: KClass<out Any>) = klass != List::class && klass != Set::class && klass != Map::class && !klass.java.isArray
+    private fun isAllowedCyclic(klass: KClass<out Any>) = klass != listClass && klass != setClass && klass != mapClass && !klass.java.isArray
     private val classes: MutableSet<Class<out Any>> = mutableSetOf()
     private val classesMap: MutableMap<KClass<out Any>, List<Class<out Any>>> = mutableMapOf()
-    private fun pseudoRandom(token: Long): Random = Random(Seed.seed with token)
+    private fun pseudoRandom(token: Long): Random = Random(seededToken(token))
+
+    private inline fun seededToken(token: Long) = Seed.seed with token
+    private val listClass = List::class
+    private val mapClass = Map::class
+    private val setClass = Set::class
 }
+
 data class ContructorParam(val type: KType, val parttoken: Token)

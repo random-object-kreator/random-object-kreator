@@ -32,7 +32,7 @@ class aRandomListOf<out T : Any>(
         return if (t != null && lastSeed == Seed.seed) t!!
         else {
             val typeOfListItems = property.returnType.arguments.first().type!!
-            val hostClassName = host::class.java.canonicalName
+            val hostClassName = host.javaClass.name
             val propertyName = property.name
             val list = aList(
                     typeOfListItems,
@@ -72,7 +72,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateRandomClass(property.returnType, property, hostClass::class.java.canonicalName.hash with property.name.hash).let {
+        else instantiateRandomClass(property.returnType, property, hostClass.javaClass.name.hash with property.name.hash).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)
@@ -100,7 +100,7 @@ class aRandomFromType<out T : Any>(private val type: KType, private val customiz
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateRandomClass(type, property, hostClass::class.java.canonicalName.hash with property.name.hash).let {
+        else instantiateRandomClass(type, property, hostClass.javaClass.name.hash with property.name.hash).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)

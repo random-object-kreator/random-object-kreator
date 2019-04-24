@@ -4,13 +4,26 @@ import org.junit.Test
 import kotlin.system.measureTimeMillis
 
 class PerformanceTest {
-    val a0 by aRandomListOf<ManyParams>(10)
+    val a0 by aRandomListOf<ManyParams>(100000)
 
+//    val t = this::class.createType()
+    val t = this.javaClass
 
     @Test
     fun isFast(){
+//        val token = Random().nextInt().hashCode().absoluteValue.print()
+//
+//        val size = (token % 10) + 1
+//        val charArray = CharArray(size)
+//
+//        for (i in 0 until size) {
+//            charArray[i] = ((token shl i).absoluteValue % 0x00ff).toChar()
+//        }
+//
+//        charArray.joinToString("")
+//                .print()
         measureTimeMillis {
-            println(a0)
+//            a0.count()
         }.print()
     }
 
@@ -28,7 +41,7 @@ class PerformanceTest {
 }
 
 
-data class Yo(val a: String, val b: Int, val c: Int)
+data class Yo(val a: String, val b: String, val c: String)
 data class I(val x: Yo, val b: Yo, val d: Yo)
 data class ManyParams(val a: I, val b: I, val c: I, val d: I, val e: I, val f: I, val g: I, val h: I)
 
