@@ -267,9 +267,11 @@ internal object CreationLogic : Reify() {
         val constructors = klass.constructors.filter { !it.parameters.any { (it.type.jvmErasure == klass) } }.toList()
         if (constructors.isEmpty() && klass.constructors.any { it.parameters.any { (it.type.jvmErasure == klass) } }) throw CyclicException()
         val defaultConstructor = constructors[pseudoRandom(token).int(constructors.size)] as KFunction<*>
-        defaultConstructor.isAccessible = true
-        val constructorTypeParameters = defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList()
-        val typeMap = type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap()
+        if (!defaultConstructor.isAccessible) {
+            defaultConstructor.isAccessible = true
+        }
+        val constructorTypeParameters by lazy { defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList() }
+        val typeMap by lazy {type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap() }
         val pairedConstructor = defaultConstructor.parameters.map { if (it.type.javaType is TypeVariable<*>) constructorTypeParameters.get(it.index) to it else "" to it }
         val parameters = (pairedConstructor.map {
             fun isTypeVariable() = it.second.type.javaType is TypeVariable<*>

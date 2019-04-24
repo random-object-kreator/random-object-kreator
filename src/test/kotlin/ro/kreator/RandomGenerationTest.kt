@@ -330,8 +330,6 @@ class RandomGenerationTest {
     }
     @Test
     fun `includes more descriptive strings`() {
-//        customUsername
-//        customId
         expect that users.map { it.id.value }.toSet().size isEqualTo users.size
         expect that user.username.value contains  "user_username"
         expect that user.id.value contains  "user_id"
