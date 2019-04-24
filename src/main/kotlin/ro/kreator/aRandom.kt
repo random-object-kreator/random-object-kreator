@@ -29,7 +29,6 @@ class aRandomListOf<out T : Any>(
     private var lastSeed = Seed.seed
 
     operator fun getValue(host: Any, property: KProperty<*>): List<T> {
-        registerCustomizations(host)
         return if (t != null && lastSeed == Seed.seed) t!!
         else {
             val typeOfListItems = property.returnType.arguments.first().type!!
@@ -72,7 +71,6 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
     private var lastSeed = Seed.seed
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
-        registerCustomizations(hostClass)
         return if (t != null && lastSeed == Seed.seed) t!!
         else instantiateRandomClass(property.returnType, property, hostClass::class.java.canonicalName.hash with property.name.hash).let {
             lastSeed = Seed.seed
@@ -80,16 +78,6 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
             t = customization(res)
             return t as T
         }
-    }
-}
-
-private fun registerCustomizations(hostClass: Any) {
-    hostClass::class.java.methods.toList().filter {
-        it.returnType == Generator0::class.java
-                || it.returnType == Generator1::class.java
-    }.forEach {
-        it.isAccessible = true
-        it.invoke(hostClass)
     }
 }
 
