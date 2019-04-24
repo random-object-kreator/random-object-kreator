@@ -16,6 +16,13 @@ class PerformanceTest {
         }.print()
     }
 
+    val i by aRandom<I>()
+
+    @Test
+    fun `caches value`() {
+        i.b
+    }
+
 
     private fun pseudoRandom(token: Long): Random = Random(Seed.seed with token)
     internal infix fun Long.with(other: Long): Long = this * 31 + other

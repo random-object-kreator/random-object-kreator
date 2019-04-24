@@ -26,6 +26,13 @@ repositories {
     mavenCentral()
 }
 
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
 dependencies {
 
     compile group: 'dom4j', name: 'dom4j', version: '1.6.1'

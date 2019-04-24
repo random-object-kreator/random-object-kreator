@@ -281,6 +281,13 @@ internal object CreationLogic : Reify() {
         val constructorTypeParameters by lazy { defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList() }
         val typeMap by lazy { type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap() }
         val pairedConstructor = defaultConstructor.parameters.map { if (it.type.javaType is TypeVariable<*>) constructorTypeParameters.get(it.index) to it else "" to it }
+
+
+        val recipe = pairedConstructor.map { (first, second: KParameter) ->
+            val tpe = if (second.type.javaType is TypeVariable<*>) typeMap[first]?.type ?: second.type else second.type
+            ContructorParam(tpe, tpe.jvmErasure.jvmName.hash with second.name!!.hash)
+        }
+
         val parameters by lazy {
             (pairedConstructor.map { (first, second: KParameter) ->
                 fun isTypeVariable() = second.type.javaType is TypeVariable<*>
@@ -293,14 +300,12 @@ internal object CreationLogic : Reify() {
 
             ObjectFactory.putIfAbsent(type, { type, past, prop, token ->
                 defaultConstructor.call(*
-                (pairedConstructor.map { (first, second: KParameter) ->
-                    fun isTypeVariable() = second.type.javaType is TypeVariable<*>
-                    val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
-                    instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.jvmName.hash with second.name!!.hash, past.plus(klass), prop)
+                (recipe.map {
+                    instantiateRandomClass(it.type, token.hash with it.parttoken, past.plus(klass), prop)
                 }).toTypedArray()
                 )
             })
-            return res
+            return instantiateRandomClass(type, token, past, kProperty)
         } catch (e: Throwable) {
             val namedParameters = parameters.zip(defaultConstructor.parameters.map { it.name }).map { "${it.second}=${it.first}" }
             throw CreationException("""Something went wrong when trying to instantiate class ${klass}
@@ -315,3 +320,4 @@ internal object CreationLogic : Reify() {
     private val classesMap: MutableMap<KClass<out Any>, List<Class<out Any>>> = mutableMapOf()
     private fun pseudoRandom(token: Long): Random = Random(Seed.seed with token)
 }
+data class ContructorParam(val type: KType, val parttoken: Token)
