@@ -18,6 +18,7 @@ import java.util.Collections.*
 import kotlin.collections.set
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -273,10 +274,10 @@ internal object CreationLogic : Reify() {
         val constructorTypeParameters by lazy { defaultConstructor.valueParameters.map { it.type.toString().replace("!", "").replace("?", "") }.toMutableList() }
         val typeMap by lazy {type.jvmErasure.typeParameters.map { it.name }.zip(type.arguments).toMap() }
         val pairedConstructor = defaultConstructor.parameters.map { if (it.type.javaType is TypeVariable<*>) constructorTypeParameters.get(it.index) to it else "" to it }
-        val parameters = (pairedConstructor.map {
-            fun isTypeVariable() = it.second.type.javaType is TypeVariable<*>
-            val tpe = if (isTypeVariable()) typeMap[it.first]?.type ?: it.second.type else it.second.type
-            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.hash with it.second.hash, past.plus(klass), kProperty)
+        val parameters = (pairedConstructor.map { (first, second: KParameter) ->
+            fun isTypeVariable() = second.type.javaType is TypeVariable<*>
+            val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
+            instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.simpleName!!.hash with second.name!!.hash, past.plus(klass), kProperty)
         }).toTypedArray()
         try {
             val res = defaultConstructor.call(*parameters)
