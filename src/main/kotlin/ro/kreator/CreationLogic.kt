@@ -27,6 +27,7 @@ import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.internal.ReflectProperties
 import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
@@ -122,7 +123,9 @@ internal object CreationLogic : Reify() {
     private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
 
+    @JvmStatic
     private val primes = intArrayOf(2, 5, 7, 11, 17, 21, 31, 97)
+
     private inline fun aString(token: Long): String {
         val seededToken = seededToken(token)
         val size = (seededToken.toInt().absoluteValue % 6) + 2
@@ -310,8 +313,10 @@ internal object CreationLogic : Reify() {
             }).toTypedArray()
         }
         try {
+            val javaConstructor = defaultConstructor.javaConstructor!!
+
             val factory: (KType, KProperty<*>?, Token) -> Any? = { type, prop, token ->
-                defaultConstructor.call(*
+                javaConstructor.newInstance(*
                 (recipe.map {
                     instantiateRandomClass(it.type, it.java, token.hashCode() with it.parttoken, prop)
                 }).toTypedArray()

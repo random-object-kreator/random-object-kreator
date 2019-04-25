@@ -93,7 +93,7 @@ class RandomGenerationTest {
         }.groupBy { a -> a }
 
         enums.forEach { _, u ->
-            expect that u.size isCloseTo 250 withinPercentage 15
+            expect that u.size isCloseTo 250 withinPercentage 20
         }
         expect that enums.size isEqualTo 4
         expect that aClassWithEnum.enum isInstance of<TheEnum>()

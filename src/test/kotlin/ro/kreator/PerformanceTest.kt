@@ -25,7 +25,7 @@ class PerformanceTest {
 //                .print()
 //        val a = setOf<Int>(*(1..100).map { it }.toTypedArray())
         measureTimeMillis {
-//            a0
+            a0
         }.print()
 
 //        measureNanoTime {
