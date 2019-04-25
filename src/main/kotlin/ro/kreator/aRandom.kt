@@ -3,7 +3,6 @@ package ro.kreator
 import ro.kreator.CreationLogic.aList
 import ro.kreator.CreationLogic.hash
 import ro.kreator.CreationLogic.with
-import java.util.Collections.*
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 
@@ -37,7 +36,6 @@ class aRandomListOf<out T : Any>(
             val list = aList(
                     typeOfListItems,
                     hostClassName.hash with propertyName.hash,
-                    emptySet(),
                     kProperty = property,
                     size = size?.dec(),
                     minSize = minSize,

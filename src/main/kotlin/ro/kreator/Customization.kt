@@ -47,7 +47,7 @@ class customize<T> {
 
         override operator fun getValue(a: Any, property: KProperty<*>): DelegateNoArg<T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock() as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock() as Any }
             return this
         }
     }
@@ -56,7 +56,7 @@ class customize<T> {
 
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate0<T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -64,7 +64,7 @@ class customize<T> {
     class Delegate1<A, T>(val constructor: (A) -> T, val constructorBlock: Creator.((A) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate1<A, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -72,7 +72,7 @@ class customize<T> {
     class Delegate2<A, B, T>(val constructor: (A, B) -> T, val constructorBlock: Creator.((A, B) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate2<A, B, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -80,7 +80,7 @@ class customize<T> {
     class Delegate3<A, B, C, T>(val constructor: (A, B, C) -> T, val constructorBlock: Creator.((A, B, C) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate3<A, B, C, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -88,7 +88,7 @@ class customize<T> {
     class Delegate4<A, B, C, D, T>(val constructor: (A, B, C, D) -> T, val constructorBlock: Creator.((A, B, C, D) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate4<A, B, C, D, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(type, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -96,7 +96,7 @@ class customize<T> {
     class Delegate5<A, B, C, D, E, T>(val constructor: (A, B, C, D, E) -> T, val constructorBlock: Creator.((A, B, C, D, E) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate5<A, B, C, D, E, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -104,7 +104,7 @@ class customize<T> {
     class Delegate6<A, B, C, D, E, F, T>(val constructor: (A, B, C, D, E, F) -> T, val constructorBlock: Creator.((A, B, C, D, E, F) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate6<A, B, C, D, E, F, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -112,7 +112,7 @@ class customize<T> {
     class Delegate7<A, B, C, D, E, F, G, T>(val constructor: (A, B, C, D, E, F, G) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate7<A, B, C, D, E, F, G, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -120,7 +120,7 @@ class customize<T> {
     class Delegate8<A, B, C, D, E, F, G, H, T>(val constructor: (A, B, C, D, E, F, G, H) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate8<A, B, C, D, E, F, G, H, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -128,7 +128,7 @@ class customize<T> {
     class Delegate9<A, B, C, D, E, F, G, H, I, T>(val constructor: (A, B, C, D, E, F, G, H, I) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate9<A, B, C, D, E, F, G, H, I, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -136,7 +136,7 @@ class customize<T> {
     class Delegate10<A, B, C, D, E, F, G, H, I, J, T>(val constructor: (A, B, C, D, E, F, G, H, I, J) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate10<A, B, C, D, E, F, G, H, I, J, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -144,7 +144,7 @@ class customize<T> {
     class Delegate11<A, B, C, D, E, F, G, H, I, J, K, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate11<A, B, C, D, E, F, G, H, I, J, K, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -152,7 +152,7 @@ class customize<T> {
     class Delegate12<A, B, C, D, E, F, G, H, I, J, K, L, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate12<A, B, C, D, E, F, G, H, I, J, K, L, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -160,7 +160,7 @@ class customize<T> {
     class Delegate13<A, B, C, D, E, F, G, H, I, J, K, L, M, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate13<A, B, C, D, E, F, G, H, I, J, K, L, M, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, property).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -168,7 +168,7 @@ class customize<T> {
     class Delegate14<A, B, C, D, E, F, G, H, I, J, K, L, M, N, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate14<A, B, C, D, E, F, G, H, I, J, K, L, M, N, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -176,7 +176,7 @@ class customize<T> {
     class Delegate15<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate15<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -184,7 +184,7 @@ class customize<T> {
     class Delegate16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -192,7 +192,7 @@ class customize<T> {
     class Delegate17<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate17<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -200,7 +200,7 @@ class customize<T> {
     class Delegate18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R) -> T) -> T) : Customization {
         override fun getValue(a: Any, property: KProperty<*>): Delegate18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }
@@ -208,7 +208,7 @@ class customize<T> {
     class Delegate19<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(val constructor: (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T, val constructorBlock: Creator.((A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S) -> T) -> T) : Customization {
         override operator fun getValue(a: Any, property: KProperty<*>): Delegate19<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T> {
             val type = property.returnType.arguments.last().type!!
-            GenericObjectFactory[type] = { _, _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
+            GenericObjectFactory[type] = { _, kproperty, token -> Creator(property.returnType.arguments.last().type!!, token, kproperty).constructorBlock(constructor) as Any }
             return this
         }
     }

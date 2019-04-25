@@ -22,8 +22,9 @@ class PerformanceTest {
 //
 //        charArray.joinToString("")
 //                .print()
+//        val a = setOf<Int>(*(1..100).map { it }.toTypedArray())
         measureTimeMillis {
-//            a0.count()
+//            a0.size
         }.print()
     }
 
