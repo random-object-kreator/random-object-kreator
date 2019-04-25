@@ -129,13 +129,13 @@ internal object CreationLogic : Reify() {
     private inline fun aString(token: Long): String {
         val seededToken = seededToken(token)
         val size = (seededToken.toInt().absoluteValue % 6) + 2
-        val charArray = CharArray(size)
+        val charArray = ByteArray(size)
 
         for (i in 1 until size + 1) {
-            charArray[i - 1] = (((seededToken * primes[i]) with Seed.seed).absoluteValue % 0x00ff).toChar()
+            charArray[i - 1] = ((seededToken * primes[i]) with Seed.seed).toByte()
         }
 
-        return String(charArray)
+        return String(charArray, Charsets.UTF_16)
     }
 
 //    private val md = MessageDigest.getInstance("MD5")

@@ -5,7 +5,7 @@ import org.junit.Test
 import kotlin.system.measureTimeMillis
 
 class PerformanceTest {
-    val a0 by aRandomListOf<ManyParams>(100_000)
+    val a0 by aRandomListOf<ManyParams>(10_000)
 
 //    val t = this::class.createType()
     val t = this.javaClass
@@ -27,7 +27,7 @@ class PerformanceTest {
 //                .print()
 //        val a = setOf<Int>(*(1..100).map { it }.toTypedArray())
         measureTimeMillis {
-            a0
+            a0.first().a.print()
         }.print()
 
 //        measureNanoTime {
