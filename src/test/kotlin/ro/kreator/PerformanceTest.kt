@@ -4,10 +4,11 @@ import org.junit.Test
 import kotlin.system.measureTimeMillis
 
 class PerformanceTest {
-    val a0 by aRandomListOf<ManyParams>(100000)
+    val a0 by aRandomListOf<ManyParams>(100_000)
 
 //    val t = this::class.createType()
     val t = this.javaClass
+    val n = this.javaClass.name
 
     @Test
     fun isFast(){
@@ -26,6 +27,24 @@ class PerformanceTest {
         measureTimeMillis {
 //            a0
         }.print()
+
+//        measureNanoTime {
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//            t.hashCode()
+//        }.print()
     }
 
     val i by aRandom<I>()

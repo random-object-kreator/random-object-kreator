@@ -2,7 +2,6 @@ package ro.kreator
 
 import javassist.util.proxy.ProxyFactory
 import javassist.util.proxy.ProxyObject
-import org.apache.commons.lang3.RandomStringUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ClasspathHelper
@@ -13,6 +12,7 @@ import java.lang.reflect.Array.*
 import java.lang.reflect.Method
 import java.lang.reflect.TypeVariable
 import java.util.*
+import kotlin.collections.LinkedHashMap
 import kotlin.collections.set
 import kotlin.math.absoluteValue
 import kotlin.reflect.KClass
@@ -36,6 +36,9 @@ import kotlin.reflect.jvm.jvmName
 typealias Token = Long
 
 internal object CreationLogic : Reify() {
+    @JvmStatic
+    internal val ObjectFactory : LinkedHashMap<Class<*>, (KType, KProperty<*>?, Token) -> Any?> = LinkedHashMap()
+
     init {
         Seed.seed
         fun list(type: KType, kProperty: KProperty<*>?, token: Token): List<*> {
@@ -84,13 +87,12 @@ internal object CreationLogic : Reify() {
         g[Array<Char>::class.invoke(Char::class()).type] = { _, kproperty, token -> list(Char::class, kproperty, token).toTypedArray() }
     }
 
-    internal object ObjectFactory : MutableMap<Class<*>, (KType, KProperty<*>?, Token) -> Any?> by mutableMapOf()
 
     internal object GenericObjectFactory {
         private val objectFactories = mutableMapOf<KType, (KType, KProperty<*>?, Token) -> Any?>()
 
         operator fun set(type: KType, factory: (KType, KProperty<*>?, Token) -> Any?): GenericObjectFactory {
-            objectFactories[type] = factory
+            objectFactories.put(type, factory)
             return this
         }
 
@@ -119,9 +121,6 @@ internal object CreationLogic : Reify() {
     private fun aFloat(token: Long): Float = pseudoRandom(token).nextFloat()
     private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
-    private fun aStrings(token: Long): String = pseudoRandom(token).let {
-        RandomStringUtils.random(Math.max(1, it.nextInt(maxStringLength)), 0, maxChar, true, true, null, it)
-    }
 
     private val primes = intArrayOf(2, 5, 7, 11, 17, 21, 31, 97)
     private inline fun aString(token: Long): String {
@@ -181,7 +180,7 @@ internal object CreationLogic : Reify() {
 
         when {
             type.isMarkedNullable && (token with Seed.seed) % 2 == 0L -> return null
-            java in ObjectFactory -> return ObjectFactory[java]?.invoke(type, kProperty, token)
+            java in ObjectFactory -> return ObjectFactory.get(java)?.invoke(type, kProperty, token)
             type in GenericObjectFactory -> return GenericObjectFactory[type]?.invoke(type, kProperty, token)
         }
         val klass = type.jvmErasure
