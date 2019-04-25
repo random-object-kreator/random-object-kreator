@@ -183,7 +183,10 @@ internal object CreationLogic : Reify() {
 
         when {
             type.isMarkedNullable && (token with Seed.seed) % 2 == 0L -> return null
-            java in ObjectFactory -> return ObjectFactory.get(java)?.invoke(type, kProperty, token)
+        }
+        val get = ObjectFactory.get(java)
+        when {
+            get != null -> return get.invoke(type, kProperty, token)
             type in GenericObjectFactory -> return GenericObjectFactory[type]?.invoke(type, kProperty, token)
         }
         val klass = type.jvmErasure
@@ -316,11 +319,14 @@ internal object CreationLogic : Reify() {
             val javaConstructor = defaultConstructor.javaConstructor!!
 
             val factory: (KType, KProperty<*>?, Token) -> Any? = { type, prop, token ->
-                javaConstructor.newInstance(*
-                (recipe.map {
-                    instantiateRandomClass(it.type, it.java, token.hashCode() with it.parttoken, prop)
-                }).toTypedArray()
-                )
+                val array = arrayOfNulls<Any>(recipe.size)
+                var count = 0
+
+                for (it in recipe) {
+                    array[count++] = instantiateRandomClass(it.type, it.java, token.hashCode() with it.parttoken, prop)
+                }
+
+                javaConstructor.newInstance(*array)
             }
 
             if (typeMap.isEmpty()) {
