@@ -39,7 +39,10 @@ typealias Token = Long
 internal object CreationLogic : Reify() {
     init {
         Seed.seed
-        fun list(type: KType, kProperty: KProperty<*>?, token: Token) = aList(type.arguments.first().type!!, token, kProperty)
+        fun list(type: KType, kProperty: KProperty<*>?, token: Token): List<*> {
+            val type1 = type.arguments.first().type!!
+            return aList(type1, token, kProperty)
+        }
         fun <T : Any> list(klass: KClass<T>, kProperty: KProperty<*>?, token: Token): List<T> = aList(klass.createType(), token, kProperty) as List<T>
         fun map(type: KType, kProperty: KProperty<*>?, token: Token) = list(type, kProperty, token)
                 .map { Pair(it, instantiateRandomClass(type.arguments[1].type!!, kProperty, token)) }.toMap()
@@ -147,7 +150,7 @@ internal object CreationLogic : Reify() {
             return hash
         }
 
-    internal infix fun Long.with(other: Long): Long {
+    internal inline infix fun Long.with(other: Long): Long {
         return this * 31 + other
     }
 
@@ -163,14 +166,13 @@ internal object CreationLogic : Reify() {
 
         return items.map {
             if (klass == List::class) {
-                aList(type.arguments.first().type!!, token.hash with it.hash, kProperty)
-            } else instantiateRandomClass(type, token.hash with it.hash, kProperty)
+                val type1 = type.arguments.first().type!!
+                aList(type1, token.hash with it.hash, kProperty)
+            } else instantiateRandomClass(type, type.jvmErasure.java, token.hash with it.hash, kProperty)
         }
     }
 
-    internal fun instantiateRandomClass(type: KType, token: Token = 0, kProperty: KProperty<*>?): Any? {
-        val klass = type.jvmErasure
-        val java = klass.java
+    internal fun instantiateRandomClass(type: KType, java: Class<*>, token: Token = 0, kProperty: KProperty<*>?): Any? {
 
         fun KClass<out Any>.isAnInterfaceOrSealed() = this.java.isInterface || this.isSealed || this.isAbstract
         fun KClass<out Any>.isAnArray() = this.java.isArray
@@ -178,17 +180,20 @@ internal object CreationLogic : Reify() {
         fun KClass<out Any>.isAnObject() = this.objectInstance != null
         fun thereIsACustomFactory() = java in ObjectFactory
         fun thereIsACustomGenericFactory() = type in GenericObjectFactory
-        fun isNullable(): Boolean = type.isMarkedNullable && pseudoRandom(token).nextInt() % 2 == 0
+        fun isNullable(): Boolean = type.isMarkedNullable && (token with Seed.seed) % 2 == 0L
 
-        return when {
-            isNullable() -> null
-            thereIsACustomFactory() -> ObjectFactory[java]?.invoke(type, kProperty, token)
-            thereIsACustomGenericFactory() -> GenericObjectFactory[type]?.invoke(type, kProperty, token)
-            klass.isAnEnum() -> java.enumConstants[anUInt(token, max = java.enumConstants.size).toInt()]
-            klass.isAnArray() -> instantiateArray(type, token, kProperty)
-            klass.isAnInterfaceOrSealed() -> instantiateAbstract(type, token, kProperty)
-            klass.isAnObject() -> klass.objectInstance
-            else -> instantiateArbitraryClass(klass, token, type, kProperty)
+        when {
+            isNullable() -> return null
+            thereIsACustomFactory() -> return ObjectFactory[java]?.invoke(type, kProperty, token)
+            thereIsACustomGenericFactory() -> return GenericObjectFactory[type]?.invoke(type, kProperty, token)
+        }
+        val klass = type.jvmErasure
+        when {
+            klass.isAnEnum() -> return java.enumConstants[anUInt(token, max = java.enumConstants.size).toInt()]
+            klass.isAnArray() -> return instantiateArray(type, token, kProperty)
+            klass.isAnInterfaceOrSealed() -> return instantiateAbstract(type, token, kProperty)
+            klass.isAnObject() -> return klass.objectInstance
+            else -> return instantiateArbitraryClass(klass, java, token, type, kProperty)
         }
     }
 
@@ -276,14 +281,14 @@ internal object CreationLogic : Reify() {
                 Any::hashCode.javaMethod?.name -> proxy.toString().hashCode()
                 Any::equals.javaMethod?.name -> proxy.toString() == obj[0].toString()
                 Any::toString.javaMethod?.name -> "\$RandomImplementation$${klass.simpleName}"
-                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, token,  kProperty) }
-                        ?: instantiateRandomClass(method.returnType.kotlin.createType(), token, kProperty)
+                else -> methodReturnTypes[method]?.let { instantiateRandomClass(it, it.jvmErasure.java, token,  kProperty) }
+                        ?: instantiateRandomClass(method.returnType.kotlin.createType(),method.returnType, token, kProperty)
             }
         })
         return proxy
     }
 
-    private fun instantiateArbitraryClass(klass: KClass<out Any>, token: Token, type: KType, kProperty: KProperty<*>?): Any? {
+    private fun instantiateArbitraryClass(klass: KClass<out Any>, java: Class<*>, token: Token, type: KType, kProperty: KProperty<*>?): Any? {
         val constructors = klass.constructors.filter { !it.parameters.any { (it.type.jvmErasure == klass) } }.toList()
         if (constructors.isEmpty() && klass.constructors.any { it.parameters.any { (it.type.jvmErasure == klass) } }) throw CyclicException()
         val defaultConstructor = constructors[pseudoRandom(token).int(constructors.size)] as KFunction<*>
@@ -297,21 +302,22 @@ internal object CreationLogic : Reify() {
 
         val recipe = pairedConstructor.map { (first, second: KParameter) ->
             val tpe = if (second.type.javaType is TypeVariable<*>) typeMap[first]?.type ?: second.type else second.type
-            ContructorParam(tpe, tpe.jvmErasure.jvmName.hash with second.name!!.hash)
+            val jvmErasure = tpe.jvmErasure
+            ContructorParam(tpe, jvmErasure.java, jvmErasure.jvmName.hash with second.name!!.hash)
         }
 
         val parameters by lazy {
             (pairedConstructor.map { (first, second: KParameter) ->
                 fun isTypeVariable() = second.type.javaType is TypeVariable<*>
                 val tpe = if (isTypeVariable()) typeMap[first]?.type ?: second.type else second.type
-                instantiateRandomClass(tpe, token.hash with tpe.jvmErasure.jvmName.hash with second.name!!.hash,  kProperty)
+                instantiateRandomClass(tpe, tpe.jvmErasure.java, token.hash with tpe.jvmErasure.jvmName.hash with second.name!!.hash,  kProperty)
             }).toTypedArray()
         }
         try {
             val factory: (KType, KProperty<*>?, Token) -> Any? = { type, prop, token ->
                 defaultConstructor.call(*
                 (recipe.map {
-                    instantiateRandomClass(it.type, token.hash with it.parttoken, prop)
+                    instantiateRandomClass(it.type, it.java, token.hash with it.parttoken, prop)
                 }).toTypedArray()
                 )
             }
@@ -321,7 +327,7 @@ internal object CreationLogic : Reify() {
             } else {
                 GenericObjectFactory.putIfAbsent(type, factory)
             }
-            return instantiateRandomClass(type, token, kProperty)
+            return instantiateRandomClass(type, java, token, kProperty)
         } catch (e: Throwable) {
             val namedParameters = parameters.zip(defaultConstructor.parameters.map { it.name }).map { "${it.second}=${it.first}" }
             throw CreationException("""Something went wrong when trying to instantiate class ${klass}
@@ -331,7 +337,6 @@ internal object CreationLogic : Reify() {
     }
 
     private fun Random.int(bound: Int) = if (bound == 0) 0 else nextInt(bound)
-    private fun isAllowedCyclic(klass: KClass<out Any>) = klass != listClass && klass != setClass && klass != mapClass && !klass.java.isArray
     private val classes: MutableSet<Class<out Any>> = mutableSetOf()
     private val classesMap: MutableMap<KClass<out Any>, List<Class<out Any>>> = mutableMapOf()
     private fun pseudoRandom(token: Long): Random = Random(seededToken(token))
@@ -342,4 +347,4 @@ internal object CreationLogic : Reify() {
     private val setClass = Set::class
 }
 
-data class ContructorParam(val type: KType, val parttoken: Token)
+data class ContructorParam(val type: KType, val java: Class<*>, val parttoken: Token)

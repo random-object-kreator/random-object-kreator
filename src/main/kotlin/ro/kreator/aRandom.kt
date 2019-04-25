@@ -5,6 +5,7 @@ import ro.kreator.CreationLogic.hash
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
+import kotlin.reflect.jvm.jvmErasure
 
 /**
  * A delegate which creates a random list of the specified type. It must be used as a delegate
@@ -107,5 +108,5 @@ class aRandomFromType<out T : Any>(private val type: KType, private val customiz
     }
 }
 
-fun instantiateRandomClass(type: KType, kProperty: KProperty<*>?, token: Long = 0): Any? = CreationLogic.instantiateRandomClass(type, token, kProperty = kProperty)
+fun instantiateRandomClass(type: KType, kProperty: KProperty<*>?, token: Long = 0): Any? = CreationLogic.instantiateRandomClass(type, type.jvmErasure.java, token, kProperty = kProperty)
 
