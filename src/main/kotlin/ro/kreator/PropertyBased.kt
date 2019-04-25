@@ -1,6 +1,5 @@
 package ro.kreator
 
-import ro.kreator.CreationLogic.hash
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -18,7 +17,7 @@ fun forAll(numberOfRuns: Int = 100, block: PropertyBased.() -> Unit) {
     val map = mutableMapOf<KType, Int>()
     fun Int.times(blk: (Int) -> Unit) = (1..this).forEach(blk)
 
-    numberOfRuns.times { Property(currentMethod.methodName.hash with it.hash, map).block() }
+    numberOfRuns.times { Property(currentMethod.methodName.hashCode() with it.hashCode(), map).block() }
 }
 
 internal class Property(token: Token, countOfInvocations: MutableMap<KType, Int>) : PropertyBased(token, countOfInvocations)
@@ -29,7 +28,7 @@ sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<
         countOfInvocations[this]?.let { countOfInvocations[this] = it.inc() } ?: { countOfInvocations[this] = 0 }()
     }
 
-    fun KType.tokenize(token: Token) = token with (countOfInvocations[this]?.hash ?: 0)
+    fun KType.tokenize(token: Token) = token with (countOfInvocations[this]?.hashCode() ?: 0)
 
     inline fun <reified T : Any> a(): T {
         val type = T::class().type.store()
@@ -62,7 +61,7 @@ sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<
     }
 
     fun <A> new(type: KType, token: Token, kProperty: KProperty<*>?): A {
-        return instantiateRandomClass(type, kProperty, token.hash with type.hash) as A
+        return instantiateRandomClass(type, kProperty, token.hashCode() with type.hashCode()) as A
     }
 }
 

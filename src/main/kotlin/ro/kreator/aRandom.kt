@@ -1,7 +1,6 @@
 package ro.kreator
 
 import ro.kreator.CreationLogic.aList
-import ro.kreator.CreationLogic.hash
 import ro.kreator.CreationLogic.with
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
@@ -36,7 +35,7 @@ class aRandomListOf<out T : Any>(
             val propertyName = property.name
             val list = aList(
                     typeOfListItems,
-                    hostClassName.hash with propertyName.hash,
+                    hostClassName.hashCode() with propertyName.hashCode(),
                     kProperty = property,
                     size = size?.dec(),
                     minSize = minSize,
@@ -71,7 +70,7 @@ class aRandom<out T : Any>(private val customization: T.() -> T = { this }) {
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateRandomClass(property.returnType, property, hostClass.javaClass.name.hash with property.name.hash).let {
+        else instantiateRandomClass(property.returnType, property, hostClass.javaClass.name.hashCode() with property.name.hashCode()).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)
@@ -99,7 +98,7 @@ class aRandomFromType<out T : Any>(private val type: KType, private val customiz
 
     operator fun getValue(hostClass: Any, property: KProperty<*>): T {
         return if (t != null && lastSeed == Seed.seed) t!!
-        else instantiateRandomClass(type, property, hostClass.javaClass.name.hash with property.name.hash).let {
+        else instantiateRandomClass(type, property, hostClass.javaClass.name.hashCode() with property.name.hashCode()).let {
             lastSeed = Seed.seed
             val res = it as T
             t = customization(res)

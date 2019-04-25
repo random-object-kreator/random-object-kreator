@@ -5,6 +5,7 @@ import java.util.*
 object Seed : Reify() {
     internal var testing = false
 
+    @JvmStatic
     var seed = Random().nextLong()
         set(value) {
             field = value
