@@ -1,5 +1,6 @@
 package ro.kreator
 
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.system.measureTimeMillis
 
@@ -10,6 +11,7 @@ class PerformanceTest {
     val t = this.javaClass
     val n = this.javaClass.name
 
+    @Ignore
     @Test
     fun isFast(){
 //        val token = Random().nextInt().hashCode().absoluteValue.print()
@@ -25,7 +27,7 @@ class PerformanceTest {
 //                .print()
 //        val a = setOf<Int>(*(1..100).map { it }.toTypedArray())
         measureTimeMillis {
-            a0
+//            a0
         }.print()
 
 //        measureNanoTime {
