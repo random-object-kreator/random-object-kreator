@@ -25,6 +25,7 @@ import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.withNullability
 import kotlin.reflect.jvm.internal.ReflectProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaConstructor
@@ -56,9 +57,12 @@ internal object CreationLogic : Reify() {
         o[kotlin.String::class.java] = { _, kproperty, token -> aString(token) }
         o[kotlin.Byte::class.java] = { _, kproperty, token -> aByte(token) }
         o[kotlin.Int::class.java] = { _, kproperty, token -> anInt(token) }
+        o[0.toUInt().let { it }::class.java] = { _, kproperty, token -> anUInt(token) }
         o[kotlin.Long::class.java] = { _, kproperty, token -> aLong(token) }
-        o[kotlin.Double::class.java] = { _, kproperty, token -> aDouble(token) }
+        o[0.toULong().let { it }::class.java] = { _, kproperty, token -> aULong(token) }
         o[kotlin.Short::class.java] = { _, kproperty, token -> aShort(token) }
+        o[0.toUShort().let { it }::class.java] = { _, kproperty, token -> aUShort(token) }
+        o[kotlin.Double::class.java] = { _, kproperty, token -> aDouble(token) }
         o[kotlin.Float::class.java] = { _, kproperty, token -> aFloat(token) }
         o[kotlin.Boolean::class.java] = { _, kproperty, token -> aBoolean(token) }
         o[kotlin.Char::class.java] = { _, kproperty, token -> aChar(token) }
@@ -114,11 +118,13 @@ internal object CreationLogic : Reify() {
 
     private fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
     private fun anInt(token: Long, max: Int = Int.MAX_VALUE): Int = seededToken(token).toInt() % max
-    private fun anUInt(token: Long, max: Int = Int.MAX_VALUE): UInt = seededToken(token).toUInt() % max.toUInt()
+    private fun anUInt(token: Long, max: Int = Int.MAX_VALUE): UInt = (seededToken(token) % max).toUInt()
 
     private fun aLong(token: Long): Long = pseudoRandom(token).nextLong()
+    private fun aULong(token: Long): ULong = pseudoRandom(token).nextLong().toULong()
     private fun aDouble(token: Long): Double = pseudoRandom(token).nextDouble()
-    private fun aShort(token: Long): Short = pseudoRandom(token).nextInt(Short.MAX_VALUE.toInt()).toShort()
+    private fun aShort(token: Long): Short = anUInt(token, UShort.MAX_VALUE.toInt()).toShort()
+    private fun aUShort(token: Long): UShort = anUInt(token, UShort.MAX_VALUE.toInt()).toUShort()
     private fun aFloat(token: Long): Float = pseudoRandom(token).nextFloat()
     private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
@@ -179,12 +185,13 @@ internal object CreationLogic : Reify() {
     fun KClass<out Any>.isAnEnum() = this.java.isEnum
     fun KClass<out Any>.isAnObject() = this.objectInstance != null
 
-    internal inline fun instantiateRandomClass(type: KType, java: Class<*>, token: Token = 0, kProperty: KProperty<*>?): Any? {
+    internal fun instantiateRandomClass(type: KType, java: Class<*>, token: Token = 0, kProperty: KProperty<*>?): Any? {
 
+        val markedNullable = type.isMarkedNullable
         when {
-            type.isMarkedNullable && (token with Seed.seed) % 2 == 0L -> return null
+            markedNullable && (token with Seed.seed) % 2 == 0L -> return null
         }
-        val get = ObjectFactory.get(java)
+        val get = ObjectFactory.get(if (markedNullable) type.withNullability(false).jvmErasure.java else java)
         when {
             get != null -> return get.invoke(type, kProperty, token)
             type in GenericObjectFactory -> return GenericObjectFactory[type]?.invoke(type, kProperty, token)
@@ -315,9 +322,9 @@ internal object CreationLogic : Reify() {
                 instantiateRandomClass(tpe, tpe.jvmErasure.java, token.hashCode() with tpe.jvmErasure.jvmName.hashCode() with second.name!!.hashCode(), kProperty)
             }).toTypedArray()
         }
-        try {
-            val javaConstructor = defaultConstructor.javaConstructor!!
+        val javaConstructor = defaultConstructor.javaConstructor!!
 
+        try {
             val factory: (KType, KProperty<*>?, Token) -> Any? = { type, prop, token ->
                 val array = arrayOfNulls<Any>(recipe.size)
                 var count = 0
@@ -326,7 +333,11 @@ internal object CreationLogic : Reify() {
                     array[count++] = instantiateRandomClass(it.type, it.java, token.hashCode() with it.parttoken, prop)
                 }
 
-                javaConstructor.newInstance(*array)
+                try {
+                    javaConstructor.newInstance(*array)
+                } catch (e: Throwable) {
+                    defaultConstructor.call(*array)
+                }
             }
 
             if (typeMap.isEmpty()) {

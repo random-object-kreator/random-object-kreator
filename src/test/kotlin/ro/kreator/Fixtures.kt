@@ -64,8 +64,12 @@ data class ClassWithArrays(
 
 data class ClassWithPrimitives(
         val int: Int,
+        val uint: UInt,
+        val intn: Int?,
         val short: Short,
+        val ushort: UShort,
         val long: Long,
+        val ulong: ULong,
         val float: Float,
         val double: Double,
         val boolean: Boolean,
