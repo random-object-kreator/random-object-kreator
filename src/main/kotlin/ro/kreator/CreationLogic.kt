@@ -2,6 +2,7 @@ package ro.kreator
 
 import javassist.util.proxy.ProxyFactory
 import javassist.util.proxy.ProxyObject
+import org.apache.commons.lang3.RandomStringUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ClasspathHelper
@@ -129,33 +130,11 @@ internal object CreationLogic : Reify() {
     private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
 
-    @JvmStatic
-    private val primes = intArrayOf(2, 5, 7, 11, 17, 21, 31, 97)
-
     private inline fun aString(token: Long): String {
         val seededToken = seededToken(token)
-        val size = (seededToken.toInt().absoluteValue % 6) + 2
-        val charArray = ByteArray(size)
-
-        for (i in 1 until size + 1) {
-            charArray[i - 1] = ((seededToken * primes[i]) with Seed.seed).toByte()
-        }
-
-        return String(charArray, Charsets.UTF_16)
+        val size = (seededToken.toInt().absoluteValue % 3) + 1
+        return RandomStringUtils.random(size, 0, 5000, true, true, null, Random(seededToken))
     }
-
-//    private val md = MessageDigest.getInstance("MD5")
-
-//    internal val Any.hash: Long
-//        get() {
-////            val array = hashCode()
-////
-////            var.hashCode() = 7L
-////            for (i in array) {
-////               .hashCode() =.hashCode() * 31 + i.toLong()
-////            }
-//            return hashCode().toLong()
-//        }
 
     internal inline infix fun Long.with(other: Long): Long = this * 31 + other
     internal inline infix fun Long.with(other: Int): Long = this * 31 + other
@@ -198,7 +177,7 @@ internal object CreationLogic : Reify() {
         }
         val klass = type.jvmErasure
         when {
-            klass.isAnEnum() -> return java.enumConstants[anUInt(token, max = java.enumConstants.size).toInt()]
+            klass.isAnEnum() -> return java.enumConstants[Random(seededToken(token)).nextInt(java.enumConstants.size)]
             klass.isAnArray() -> return instantiateArray(type, token, kProperty)
             klass.isAnInterfaceOrSealed() -> return instantiateAbstract(type, token, kProperty)
             klass.isAnObject() -> return klass.objectInstance

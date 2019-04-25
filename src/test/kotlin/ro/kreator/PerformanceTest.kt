@@ -2,6 +2,7 @@ package ro.kreator
 
 import org.junit.Ignore
 import org.junit.Test
+import java.util.*
 import kotlin.system.measureTimeMillis
 
 class PerformanceTest {
@@ -10,6 +11,12 @@ class PerformanceTest {
 //    val t = this::class.createType()
     val t = this.javaClass
     val n = this.javaClass.name
+
+    @Test
+    fun dfdf() {
+        val time = Random().nextLong()
+
+    }
 
     @Ignore
     @Test
@@ -55,7 +62,6 @@ class PerformanceTest {
     fun `caches value`() {
         i.b
     }
-
 
 //    private fun pseudoRandom(token: Long): Random = Random(Seed.seed with token)
 //    internal infix fun Long.with(other: Long): Long = this * 31 + other
