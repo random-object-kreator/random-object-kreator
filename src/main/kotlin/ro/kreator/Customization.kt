@@ -16,7 +16,6 @@ fun registerCustomizations(vararg customizations: Customization) = listOf(custom
 
 class customize<T> {
 
-
     fun using(fn: () -> T, g: Creator.(() -> T) -> T) = Delegate0(fn, g)
     fun <A> using(fn: (A) -> T, g: Creator.((A) -> T) -> T) = Delegate1(fn, g)
     fun <A, B> using(fn: (A, B) -> T, g: Creator.((A, B) -> T) -> T) = Delegate2(fn, g)

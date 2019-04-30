@@ -1,6 +1,7 @@
 package ro.kreator
 
 import ro.kreator.CreationLogic.with
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
@@ -76,6 +77,9 @@ abstract class Reify {
 }
 
 class Creator(val type: KType, token: Token, val property: KProperty<*>?) : PropertyBased(token, mutableMapOf()) {
+
+
+    val Any?.sometimesNull get() = Random(token).nextBoolean().takeIf { it }?.let { this }
 
     object any
 
