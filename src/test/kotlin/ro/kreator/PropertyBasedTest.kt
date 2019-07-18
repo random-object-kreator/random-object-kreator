@@ -59,6 +59,14 @@ class PropertyBasedTest {
             expect that a<Param5<Int, Int, Int, Int, Int>>(Int::class(), Int::class(), Int::class(), Int::class(), Int::class()) is_ notNull
         }
     }
+
+    @Test
+    fun `supports custom strings`() {
+        forAll {
+            expect that "^[0-9a-zA-Z]+$".toRegex().matches(aString(true)) _is true
+            expect that aString(true) _is notNull
+        }
+    }
 }
 
 object Param0

@@ -1,6 +1,5 @@
 package ro.kreator
 
-import ro.kreator.CreationLogic.with
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -23,13 +22,17 @@ fun forAll(numberOfRuns: Int = 100, block: PropertyBased.() -> Unit) {
 
 internal class Property(token: Token, countOfInvocations: MutableMap<KType, Int>) : PropertyBased(token, countOfInvocations)
 
-sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<KType, Int>) : Reify() {
+sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<KType, Int>) : Reify(), Generators {
 
     fun KType.store() = this.apply {
         countOfInvocations[this]?.let { countOfInvocations[this] = it.inc() } ?: { countOfInvocations[this] = 0 }()
     }
 
     fun KType.tokenize(token: Token) = token with (countOfInvocations[this]?.hashCode() ?: 0)
+
+    fun aString(urlSafe: Boolean = false): String {
+        return aString(token, urlSafe)
+    }
 
     inline fun <reified T : Any> a(): T {
         val type = T::class().type.store()

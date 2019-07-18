@@ -38,9 +38,57 @@ import kotlin.reflect.jvm.jvmName
 
 typealias Token = Long
 
-internal object CreationLogic : Reify() {
+interface Generators {
+    private val maxChar get() =  59319
+    private val maxStringLength get() = 5
+
+    fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
+    fun anInt(token: Long, max: Int = Int.MAX_VALUE): Int = seededToken(token).toInt() % max
+    fun anUInt(token: Long, max: Int = Int.MAX_VALUE): UInt = (seededToken(token) % max).toUInt()
+
+    fun aLong(token: Long): Long = pseudoRandom(token).nextLong()
+    fun aULong(token: Long): ULong = pseudoRandom(token).nextLong().toULong()
+    fun aDouble(token: Long): Double = pseudoRandom(token).nextDouble()
+    fun aShort(token: Long): Short = anUInt(token, UShort.MAX_VALUE.toInt()).toShort()
+    fun aUShort(token: Long): UShort = anUInt(token, UShort.MAX_VALUE.toInt()).toUShort()
+    fun aFloat(token: Long): Float = pseudoRandom(token).nextFloat()
+    fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
+    fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
+
+    fun aString(token: Long, urlSafe: Boolean = false): String {
+        val seededToken = seededToken(token)
+        val size = (seededToken.toInt().absoluteValue % 3) + 1
+
+        return if (urlSafe) RandomStringUtils.randomAlphanumeric(1, size)
+        else
+            RandomStringUtils.random(size, 0, 5000, true, true, null, Random(seededToken))
+    }
+
+    fun pseudoRandom(token: Long): Random = Random(seededToken(token))
+
+
+    fun aList(type: KType,
+                       token: Long,
+                       kProperty: KProperty<*>?,
+                       size: Int? = null,
+                       minSize: Int = 1,
+                       maxSize: Int = 5): List<*> {
+        val klass = type.jvmErasure
+
+        val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize - minSize) + minSize))
+
+        return items.map {
+            if (klass == List::class) {
+                val type1 = type.arguments.first().type!!
+                aList(type1, token.hashCode() with it.hashCode(), kProperty)
+            } else CreationLogic.instantiateRandomClass(type, type.jvmErasure.java, token.hashCode() with it.hashCode(), kProperty)
+        }
+    }
+}
+
+internal object CreationLogic : Reify(), Generators {
     @JvmStatic
-    internal val ObjectFactory : LinkedHashMap<Class<*>, (KType, KProperty<*>?, Token) -> Any?> = LinkedHashMap()
+    internal val ObjectFactory: LinkedHashMap<Class<*>, (KType, KProperty<*>?, Token) -> Any?> = LinkedHashMap()
 
     init {
         Seed.seed
@@ -111,51 +159,6 @@ internal object CreationLogic : Reify() {
 
         operator fun contains(type: KType): Boolean {
             return get(type)?.let { true } ?: false
-        }
-    }
-
-    private val maxChar = 59319
-    private val maxStringLength = 5
-
-    private fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
-    private fun anInt(token: Long, max: Int = Int.MAX_VALUE): Int = seededToken(token).toInt() % max
-    private fun anUInt(token: Long, max: Int = Int.MAX_VALUE): UInt = (seededToken(token) % max).toUInt()
-
-    private fun aLong(token: Long): Long = pseudoRandom(token).nextLong()
-    private fun aULong(token: Long): ULong = pseudoRandom(token).nextLong().toULong()
-    private fun aDouble(token: Long): Double = pseudoRandom(token).nextDouble()
-    private fun aShort(token: Long): Short = anUInt(token, UShort.MAX_VALUE.toInt()).toShort()
-    private fun aUShort(token: Long): UShort = anUInt(token, UShort.MAX_VALUE.toInt()).toUShort()
-    private fun aFloat(token: Long): Float = pseudoRandom(token).nextFloat()
-    private fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
-    private fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
-
-    private inline fun aString(token: Long): String {
-        val seededToken = seededToken(token)
-        val size = (seededToken.toInt().absoluteValue % 3) + 1
-        return RandomStringUtils.random(size, 0, 5000, true, true, null, Random(seededToken))
-    }
-
-    internal inline infix fun Long.with(other: Long): Long = this * 31 + other
-    internal inline infix fun Long.with(other: Int): Long = this * 31 + other
-    internal inline infix fun Int.with(other: Long): Long = this * 31 + other
-    internal inline infix fun Int.with(other: Int): Long = (this * 31 + other).toLong()
-
-    internal fun aList(type: KType,
-                       token: Long,
-                       kProperty: KProperty<*>?,
-                       size: Int? = null,
-                       minSize: Int = 1,
-                       maxSize: Int = 5): List<*> {
-        val klass = type.jvmErasure
-
-        val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize - minSize) + minSize))
-
-        return items.map {
-            if (klass == List::class) {
-                val type1 = type.arguments.first().type!!
-                aList(type1, token.hashCode() with it.hashCode(), kProperty)
-            } else instantiateRandomClass(type, type.jvmErasure.java, token.hashCode() with it.hashCode(), kProperty)
         }
     }
 
@@ -336,12 +339,15 @@ internal object CreationLogic : Reify() {
     private fun Random.int(bound: Int) = if (bound == 0) 0 else nextInt(bound)
     private val classes: MutableSet<Class<out Any>> = mutableSetOf()
     private val classesMap: MutableMap<KClass<out Any>, List<Class<out Any>>> = mutableMapOf()
-    private fun pseudoRandom(token: Long): Random = Random(seededToken(token))
-
-    private inline fun seededToken(token: Long) = Seed.seed with token
     private val listClass = List::class
     private val mapClass = Map::class
     private val setClass = Set::class
 }
 
 data class ContructorParam(val type: KType, val java: Class<*>, val parttoken: Token)
+
+internal inline infix fun Long.with(other: Long): Long = this * 31 + other
+internal inline infix fun Long.with(other: Int): Long = this * 31 + other
+internal inline infix fun Int.with(other: Long): Long = this * 31 + other
+internal inline infix fun Int.with(other: Int): Long = (this * 31 + other).toLong()
+internal fun seededToken(token: Long) = Seed.seed with token
