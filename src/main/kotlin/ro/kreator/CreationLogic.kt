@@ -39,7 +39,7 @@ import kotlin.reflect.jvm.jvmName
 typealias Token = Long
 
 interface Generators {
-    private val maxChar get() =  59319
+    private val maxChar get() = 59319
     private val maxStringLength get() = 5
 
     fun aChar(token: Long): Char = pseudoRandom(token).nextInt(maxChar).toChar()
@@ -55,11 +55,11 @@ interface Generators {
     fun aByte(token: Long): Byte = pseudoRandom(token).nextInt(255).toByte()
     fun aBoolean(token: Long): Boolean = pseudoRandom(token).nextBoolean()
 
-    fun aString(token: Long, urlSafe: Boolean = false): String {
+    fun aString(token: Long, urlSafe: Boolean = false, minSize: Int = 1, maxSize: Int = 3): String {
         val seededToken = seededToken(token)
-        val size = (seededToken.toInt().absoluteValue % 3) + 1
+        val size = Math.max(seededToken.toInt().absoluteValue % maxSize, minSize)
 
-        return if (urlSafe) RandomStringUtils.randomAlphanumeric(1, size)
+        return if (urlSafe) RandomStringUtils.randomAlphanumeric(minSize, size)
         else
             RandomStringUtils.random(size, 0, 5000, true, true, null, Random(seededToken))
     }
@@ -68,11 +68,11 @@ interface Generators {
 
 
     fun aList(type: KType,
-                       token: Long,
-                       kProperty: KProperty<*>?,
-                       size: Int? = null,
-                       minSize: Int = 1,
-                       maxSize: Int = 5): List<*> {
+              token: Long,
+              kProperty: KProperty<*>?,
+              size: Int? = null,
+              minSize: Int = 1,
+              maxSize: Int = 5): List<*> {
         val klass = type.jvmErasure
 
         val items = 0..(size ?: (pseudoRandom(token).nextInt(maxSize - minSize) + minSize))

@@ -30,8 +30,8 @@ sealed class PropertyBased(val token: Token, val countOfInvocations: MutableMap<
 
     fun KType.tokenize(token: Token) = token with (countOfInvocations[this]?.hashCode() ?: 0)
 
-    fun aString(urlSafe: Boolean = false): String {
-        return aString(token, urlSafe)
+    fun aString(urlSafe: Boolean = false, minSize: Int = 1, maxSize: Int = 3): String {
+        return aString(token, urlSafe = urlSafe, minSize = minSize, maxSize = maxSize)
     }
 
     inline fun <reified T : Any> a(): T {

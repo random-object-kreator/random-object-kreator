@@ -54,7 +54,6 @@ class RandomGenerationTest {
                 aSimpleClass.name
             }
         }
-//                .toSet().size isEqualTo 100000
     }
 
     @Test

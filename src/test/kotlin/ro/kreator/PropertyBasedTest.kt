@@ -65,6 +65,8 @@ class PropertyBasedTest {
         forAll {
             expect that "^[0-9a-zA-Z]+$".toRegex().matches(aString(true)) _is true
             expect that aString(true) _is notNull
+
+            expect that aString(minSize = 5, maxSize = 10).length isBetween 5..10
         }
     }
 }
