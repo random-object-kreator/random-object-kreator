@@ -45,6 +45,12 @@ data class WhatsappUserSendDestination(
 
 enum class SendType { URL, FILE }
 
+interface One
+class Two: One
+class Three: One
+sealed class TheClass
+
+
 class Test3 {
     private val sendOptions by aRandomListOf<SendOption>()
 

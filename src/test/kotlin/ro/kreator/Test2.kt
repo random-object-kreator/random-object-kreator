@@ -44,6 +44,7 @@ class Test2 {
     fun `works with out of order parameters`() {
         expect that aFunkyVisual.image isInstance of<Image>()
         expect that aFunkyVisual.i isInstance of<Image>()
+
         expect that aFunkyVisual.video isInstance of<Video>()
         expect that aFunkyVisual.v isInstance of<Video>()
         expect that aFunkyVisual.y isInstance of<String>()
